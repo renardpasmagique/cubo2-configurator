@@ -16,7 +16,7 @@ import {
   SHOW_PRICING,
   WOOD_PLATE_PRICE,
 } from '../config/pricing';
-import { INSTAGRAM_URL, renderSimilarProductsModal } from '../data/catalogLinks';
+import { renderSimilarProductsModal } from '../data/catalogLinks';
 import { CameraPreset } from '../scene/Cubo2Viewer';
 
 export interface UIHandlers {
@@ -35,6 +35,7 @@ export class ConfiguratorUI {
   private showQuoteModal = false;
   private showDescriptionModal = false;
   private showGalleryModal = false;
+  private lightboxIdx: number | null = null;
   private showSimilarModal = false;
   private photos: string[] = [];
   private quoteScreenshot = '';
@@ -129,10 +130,7 @@ export class ConfiguratorUI {
     this.root.innerHTML = `
       <div class="panel-header">
         <div class="brand-row">
-          <div>
-            <h1 class="product-title">CUBO 2</h1>
-            <div class="product-sub">Enceinte 2 voies • 15" + Pavillon</div>
-          </div>
+          <h1 class="product-title">CUBO 2</h1>
           <div class="header-btns">
             <button class="btn-icon" id="btn-gallery" title="Galerie photos">Photos</button>
             <button class="btn-icon" id="btn-desc" title="Descriptif &amp; Spécifications">Descriptif</button>
@@ -146,7 +144,6 @@ export class ConfiguratorUI {
             (s) => `
           <section class="step-card ${this.activeStep === s.id ? 'is-open' : ''}">
             <button class="step-header" data-step="${s.id}">
-              <span class="step-num">0${s.id}</span>
               <span class="step-title">${s.title}</span>
               <span class="step-chevron">${this.activeStep === s.id ? '−' : '+'}</span>
             </button>
@@ -182,10 +179,6 @@ export class ConfiguratorUI {
         <div class="footer-actions">
           <button class="btn-secondary" id="btn-screenshot" title="Capturer un rendu PNG">Aperçu PNG</button>
           <button class="btn-primary" id="btn-quote">Demander un devis →</button>
-        </div>
-        <div class="policy-bar" style="padding-top:6px">
-          <a class="policy-pill" href="${INSTAGRAM_URL}" target="_blank" rel="noopener noreferrer">Instagram @5426_studio</a>
-          <a class="policy-pill" href="https://liampiecourt.fr" target="_blank" rel="noopener noreferrer">Portfolio</a>
         </div>
       </div>
 
@@ -590,18 +583,33 @@ export class ConfiguratorUI {
               ${imgs
                 .map(
                   (url, i) => `
-                <figure class="cubo-gallery-item">
+                <button type="button" class="cubo-gallery-item cubo-gallery-btn" data-gallery-zoom="${i}" title="Agrandir la photo ${i + 1}">
                   <img src="${url}" alt="Enceinte CUBO 2 5426 Studio — finition bois, pavillon 3D PETG et filtre CROSS 2 (${i + 1})" loading="lazy" />
-                </figure>
+                </button>
               `
                 )
                 .join('')}
             </div>
           `
-              : `<p class="hint-text">Consultez nos réalisations CUBO 2 sur <a href="${INSTAGRAM_URL}" target="_blank" rel="noopener noreferrer">Instagram @5426_studio</a>.</p>`
+              : `<p class="hint-text">Aucune photo disponible.</p>`
           }
         </div>
       </div>
+      ${
+        isOpen && this.lightboxIdx !== null && this.photos[this.lightboxIdx]
+          ? `
+        <div class="lightbox-backdrop" id="gallery-lightbox">
+          <button type="button" class="photo-nav-btn photo-nav-prev" id="btn-lb-prev" title="Photo précédente">‹</button>
+          <img class="lightbox-img" src="${this.photos[this.lightboxIdx]}" alt="CUBO 2 — photo ${this.lightboxIdx + 1}" />
+          <button type="button" class="photo-nav-btn photo-nav-next" id="btn-lb-next" title="Photo suivante">›</button>
+          <div class="lightbox-bar">
+            <span>${this.lightboxIdx + 1} / ${this.photos.length}</span>
+            <button type="button" class="btn-icon" id="btn-lb-close">Fermer ✕</button>
+          </div>
+        </div>
+      `
+          : ''
+      }
     `;
   }
 
@@ -742,11 +750,43 @@ export class ConfiguratorUI {
     });
     this.root.querySelector('#btn-close-gallery-modal')?.addEventListener('click', () => {
       this.showGalleryModal = false;
+      this.lightboxIdx = null;
       this.render();
     });
     this.root.querySelector('#gallery-modal-backdrop')?.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).id === 'gallery-modal-backdrop') {
         this.showGalleryModal = false;
+        this.lightboxIdx = null;
+        this.render();
+      }
+    });
+    this.root.querySelectorAll<HTMLElement>('[data-gallery-zoom]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.lightboxIdx = Number(btn.dataset.galleryZoom);
+        this.render();
+      });
+    });
+    this.root.querySelector('#btn-lb-close')?.addEventListener('click', () => {
+      this.lightboxIdx = null;
+      this.render();
+    });
+    this.root.querySelector('#btn-lb-prev')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this.lightboxIdx !== null && this.photos.length > 0) {
+        this.lightboxIdx = (this.lightboxIdx - 1 + this.photos.length) % this.photos.length;
+        this.render();
+      }
+    });
+    this.root.querySelector('#btn-lb-next')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this.lightboxIdx !== null && this.photos.length > 0) {
+        this.lightboxIdx = (this.lightboxIdx + 1) % this.photos.length;
+        this.render();
+      }
+    });
+    this.root.querySelector('#gallery-lightbox')?.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).id === 'gallery-lightbox') {
+        this.lightboxIdx = null;
         this.render();
       }
     });
