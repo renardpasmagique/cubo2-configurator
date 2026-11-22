@@ -23,6 +23,8 @@ export class HornFileViewer {
   private camera: THREE.PerspectiveCamera;
   private controls: OrbitControls;
   private hornGroup = new THREE.Group();
+  private dimGroup = new THREE.Group();
+  private dimensionsVisible = false;
   private hornMat: THREE.MeshPhysicalMaterial;
   private hornEdgeMat: THREE.LineBasicMaterial;
   private printTex = create3DPrintLayerTexture();
@@ -73,6 +75,9 @@ export class HornFileViewer {
     window.addEventListener('sf3d-theme-change', (ev: Event) => {
       const dark = Boolean((ev as CustomEvent).detail?.isDark);
       this.scene.environmentIntensity = dark ? 0.95 : 0.65;
+      if (this.dimensionsVisible) {
+        this.rebuildDimensionsHelper();
+      }
     });
 
     const aspect = container.clientWidth / Math.max(1, container.clientHeight);
@@ -109,6 +114,8 @@ export class HornFileViewer {
     });
 
     this.scene.add(this.hornGroup);
+    this.dimGroup.visible = false;
+    this.scene.add(this.dimGroup);
     this.loadHorn(hornType, onLoaded, onError);
     window.addEventListener('resize', this.handleResize);
     this.animate();
@@ -188,6 +195,119 @@ export class HornFileViewer {
     const lum = new THREE.Color(hex).getHSL({ h: 0, s: 0, l: 0 }).l;
     this.hornEdgeMat.color.set(lum < 0.25 ? '#ffffff' : '#1e2024');
     this.hornEdgeMat.opacity = lum < 0.25 ? 0.22 : 0.18;
+  }
+
+  public setDimensionsVisible(visible: boolean): void {
+    this.dimensionsVisible = visible;
+    this.dimGroup.visible = visible;
+    if (visible) {
+      this.rebuildDimensionsHelper();
+    }
+  }
+
+  private rebuildDimensionsHelper(): void {
+    while (this.dimGroup.children.length > 0) {
+      const child = this.dimGroup.children[0];
+      this.dimGroup.remove(child);
+      if ((child as THREE.Line).geometry) {
+        (child as THREE.Line).geometry.dispose();
+      }
+      if ((child as THREE.Sprite).isSprite) {
+        const spMat = (child as THREE.Sprite).material as THREE.SpriteMaterial;
+        spMat.map?.dispose();
+        spMat.dispose();
+      }
+    }
+
+    this.hornGroup.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(this.hornGroup);
+    if (box.isEmpty()) return;
+
+    const { min, max } = box;
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const widthCm = (Math.round(size.x * 1000) / 10).toFixed(1);
+    const heightCm = (Math.round(size.y * 1000) / 10).toFixed(1);
+    const depthCm = (Math.round(size.z * 1000) / 10).toFixed(1);
+
+    const isDark = getSf3dTheme() === 'dark';
+    const textHex = isDark ? '#f4f2ee' : '#151515';
+    const lineMat = new THREE.LineBasicMaterial({
+      color: textHex,
+      transparent: true,
+      opacity: 0.85,
+    });
+
+    const addDimLabel = (label: string, pos: THREE.Vector3) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 72;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '700 34px "Source Sans 3", system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = textHex;
+        ctx.fillText(label, canvas.width / 2, canvas.height / 2);
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+      const sprite = new THREE.Sprite(mat);
+      sprite.position.copy(pos);
+      sprite.scale.set(0.115, 0.032, 1);
+      sprite.renderOrder = 20;
+      this.dimGroup.add(sprite);
+    };
+
+    const off = 0.028;
+    const tick = 0.009;
+    const addDimLine = (a: THREE.Vector3, b: THREE.Vector3, tickDir: THREE.Vector3) => {
+      const pts = [
+        a,
+        b,
+        a.clone().addScaledVector(tickDir, -tick),
+        a.clone().addScaledVector(tickDir, tick),
+        b.clone().addScaledVector(tickDir, -tick),
+        b.clone().addScaledVector(tickDir, tick),
+      ];
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      this.dimGroup.add(new THREE.LineSegments(geo, lineMat));
+    };
+
+    // Largeur (X)
+    addDimLine(
+      new THREE.Vector3(min.x, min.y + 0.002, max.z + off),
+      new THREE.Vector3(max.x, min.y + 0.002, max.z + off),
+      new THREE.Vector3(0, 0, 1)
+    );
+    addDimLabel(
+      `L ${widthCm} cm`,
+      new THREE.Vector3((min.x + max.x) * 0.5, min.y + 0.006, max.z + off + 0.025)
+    );
+
+    // Hauteur (Y)
+    addDimLine(
+      new THREE.Vector3(max.x + off, min.y, max.z + off * 0.5),
+      new THREE.Vector3(max.x + off, max.y, max.z + off * 0.5),
+      new THREE.Vector3(1, 0, 0)
+    );
+    addDimLabel(
+      `H ${heightCm} cm`,
+      new THREE.Vector3(max.x + off + 0.055, (min.y + max.y) * 0.5, max.z + off * 0.5)
+    );
+
+    // Profondeur (Z)
+    addDimLine(
+      new THREE.Vector3(max.x + off, min.y + 0.002, min.z),
+      new THREE.Vector3(max.x + off, min.y + 0.002, max.z),
+      new THREE.Vector3(1, 0, 0)
+    );
+    addDimLabel(
+      `P ${depthCm} cm`,
+      new THREE.Vector3(max.x + off + 0.045, min.y + 0.012, (min.z + max.z) * 0.5)
+    );
   }
 
   public setCameraPreset(preset: CameraPreset): void {

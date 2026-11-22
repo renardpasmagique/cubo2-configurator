@@ -26,7 +26,7 @@ export function applyRelica3Materials(root: THREE.Object3D, assetsBase: string, 
     onTexLoaded?.();
   });
   pcbTex.colorSpace = THREE.SRGBColorSpace;
-  pcbTex.flipY = true;
+  pcbTex.flipY = false;
   pcbTex.anisotropy = 4;
 
   const mats: Record<string, THREE.Material> = {
