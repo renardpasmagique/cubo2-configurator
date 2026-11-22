@@ -518,18 +518,53 @@ export class Cubo2Viewer {
       if ((child as THREE.Line).geometry) {
         (child as THREE.Line).geometry.dispose();
       }
+      if ((child as THREE.Sprite).isSprite) {
+        const spMat = (child as THREE.Sprite).material as THREE.SpriteMaterial;
+        spMat.map?.dispose();
+        spMat.dispose();
+      }
     }
 
     const box = this.computeVisibleBounds();
     if (box.isEmpty()) return;
 
     const { min, max } = box;
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const widthCm = (Math.round(size.x * 1000) / 10).toFixed(1);
+    const heightCm = (Math.round(size.y * 1000) / 10).toFixed(1);
+    const depthCm = (Math.round(size.z * 1000) / 10).toFixed(1);
+
     const isDark = getSf3dTheme() === 'dark';
+    const textHex = isDark ? '#f4f2ee' : '#151515';
     const lineMat = new THREE.LineBasicMaterial({
-      color: isDark ? '#f4f2ee' : '#151515',
+      color: textHex,
       transparent: true,
       opacity: 0.85,
     });
+
+    const addDimLabel = (label: string, pos: THREE.Vector3) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 72;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '700 32px "Source Sans 3", system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = textHex;
+        ctx.fillText(label, canvas.width / 2, canvas.height / 2);
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+      const sprite = new THREE.Sprite(mat);
+      sprite.position.copy(pos);
+      sprite.scale.set(0.24, 0.068, 1);
+      sprite.renderOrder = 20;
+      this.dimGroup.add(sprite);
+    };
 
     const off = 0.055;
     const tick = 0.018;
@@ -553,17 +588,31 @@ export class Cubo2Viewer {
       new THREE.Vector3(max.x, min.y + 0.005, max.z + off),
       new THREE.Vector3(0, 0, 1)
     );
+    addDimLabel(
+      `L ${widthCm} cm`,
+      new THREE.Vector3((min.x + max.x) * 0.5, min.y + 0.012, max.z + off + 0.05)
+    );
+
     // Hauteur (Y) along front-right vertical edge
     addDimLine(
       new THREE.Vector3(max.x + off, min.y, max.z + off * 0.5),
       new THREE.Vector3(max.x + off, max.y, max.z + off * 0.5),
       new THREE.Vector3(1, 0, 0)
     );
+    addDimLabel(
+      `H ${heightCm} cm`,
+      new THREE.Vector3(max.x + off + 0.11, (min.y + max.y) * 0.5, max.z + off * 0.5)
+    );
+
     // Profondeur (Z) along right bottom edge
     addDimLine(
       new THREE.Vector3(max.x + off, min.y + 0.005, min.z),
       new THREE.Vector3(max.x + off, min.y + 0.005, max.z),
       new THREE.Vector3(1, 0, 0)
+    );
+    addDimLabel(
+      `P ${depthCm} cm`,
+      new THREE.Vector3(max.x + off + 0.08, min.y + 0.025, (min.z + max.z) * 0.5)
     );
   }
 
