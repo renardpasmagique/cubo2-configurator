@@ -1,0 +1,228 @@
+{
+  "catalog": "Anycubic PETG",
+  "version": "1.0.0",
+  "shaderPresets": {
+    "classique": {
+      "roughness": 0.35,
+      "metalness": 0.0,
+      "clearcoat": 0.2,
+      "clearcoatRoughness": 0.22,
+      "transmission": 0.0,
+      "ior": 1.54,
+      "thickness": 0.0,
+      "transparent": false,
+      "opacity": 1.0
+    },
+    "translucent": {
+      "roughness": 0.25,
+      "metalness": 0.0,
+      "clearcoat": 0.3,
+      "clearcoatRoughness": 0.16,
+      "transmission": 0.65,
+      "ior": 1.54,
+      "thickness": 2.0,
+      "transparent": true,
+      "opacity": 0.92
+    }
+  },
+  "filaments": [
+    {
+      "id": "petg_white",
+      "sku_filament": "ANY-PETG-CLS-WHT",
+      "nom_commercial": "Anycubic PETG Classique - Blanc",
+      "short_name": "Blanc",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#f0f1f3"
+    },
+    {
+      "id": "petg_black",
+      "sku_filament": "ANY-PETG-CLS-BLK",
+      "nom_commercial": "Anycubic PETG Classique - Noir",
+      "short_name": "Noir",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#1b1c1f"
+    },
+    {
+      "id": "petg_grey",
+      "sku_filament": "ANY-PETG-CLS-GRY",
+      "nom_commercial": "Anycubic PETG Classique - Gris",
+      "short_name": "Gris",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#7f848c"
+    },
+    {
+      "id": "petg_silver",
+      "sku_filament": "ANY-PETG-CLS-SLV",
+      "nom_commercial": "Anycubic PETG Classique - Argent",
+      "short_name": "Argent",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#b8bdc4"
+    },
+    {
+      "id": "petg_blue",
+      "sku_filament": "ANY-PETG-CLS-BLU",
+      "nom_commercial": "Anycubic PETG Classique - Bleu",
+      "short_name": "Bleu",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#1f569c"
+    },
+    {
+      "id": "petg_light_blue",
+      "sku_filament": "ANY-PETG-CLS-LBL",
+      "nom_commercial": "Anycubic PETG Classique - Bleu Clair",
+      "short_name": "Bleu Clair",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#5ba4cf"
+    },
+    {
+      "id": "petg_green",
+      "sku_filament": "ANY-PETG-CLS-GRN",
+      "nom_commercial": "Anycubic PETG Classique - Vert",
+      "short_name": "Vert",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#2a7846"
+    },
+    {
+      "id": "petg_red",
+      "sku_filament": "ANY-PETG-CLS-RED",
+      "nom_commercial": "Anycubic PETG Classique - Rouge",
+      "short_name": "Rouge",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#b82927"
+    },
+    {
+      "id": "petg_orange",
+      "sku_filament": "ANY-PETG-CLS-ORG",
+      "nom_commercial": "Anycubic PETG Classique - Orange",
+      "short_name": "Orange",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#d96b27"
+    },
+    {
+      "id": "petg_yellow",
+      "sku_filament": "ANY-PETG-CLS-YLW",
+      "nom_commercial": "Anycubic PETG Classique - Jaune",
+      "short_name": "Jaune",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#e0b422"
+    },
+    {
+      "id": "petg_purple",
+      "sku_filament": "ANY-PETG-CLS-PRP",
+      "nom_commercial": "Anycubic PETG Classique - Violet",
+      "short_name": "Violet",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#5e3b7a"
+    },
+    {
+      "id": "petg_pink",
+      "sku_filament": "ANY-PETG-CLS-PNK",
+      "nom_commercial": "Anycubic PETG Classique - Rose",
+      "short_name": "Rose",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#d47a92"
+    },
+    {
+      "id": "petg_brown",
+      "sku_filament": "ANY-PETG-CLS-BRN",
+      "nom_commercial": "Anycubic PETG Classique - Marron",
+      "short_name": "Marron",
+      "gamme": "Anycubic PETG Classique",
+      "translucent": false,
+      "code_hex": "#6b442b"
+    },
+    {
+      "id": "petg_tr_clear",
+      "sku_filament": "ANY-PETG-TRL-CLR",
+      "nom_commercial": "Anycubic PETG Translucent - Transparent",
+      "short_name": "Transparent",
+      "gamme": "Anycubic PETG Translucent",
+      "translucent": true,
+      "code_hex": "#eef2f5"
+    },
+    {
+      "id": "petg_tr_grey",
+      "sku_filament": "ANY-PETG-TRL-GRY",
+      "nom_commercial": "Anycubic PETG Translucent - Gris Translucide",
+      "short_name": "Gris Translucide",
+      "gamme": "Anycubic PETG Translucent",
+      "translucent": true,
+      "code_hex": "#7a8088"
+    },
+    {
+      "id": "petg_tr_blue",
+      "sku_filament": "ANY-PETG-TRL-BLU",
+      "nom_commercial": "Anycubic PETG Translucent - Bleu Translucide",
+      "short_name": "Bleu Translucide",
+      "gamme": "Anycubic PETG Translucent",
+      "translucent": true,
+      "code_hex": "#2c7cc4"
+    },
+    {
+      "id": "petg_tr_green",
+      "sku_filament": "ANY-PETG-TRL-GRN",
+      "nom_commercial": "Anycubic PETG Translucent - Vert Translucide",
+      "short_name": "Vert Translucide",
+      "gamme": "Anycubic PETG Translucent",
+      "translucent": true,
+      "code_hex": "#2e945a"
+    },
+    {
+      "id": "petg_tr_olive",
+      "sku_filament": "ANY-PETG-TRL-OLV",
+      "nom_commercial": "Anycubic PETG Translucent - Olive Translucide",
+      "short_name": "Olive Translucide",
+      "gamme": "Anycubic PETG Translucent",
+      "translucent": true,
+      "code_hex": "#5c6b3c"
+    },
+    {
+      "id": "petg_tr_orange",
+      "sku_filament": "ANY-PETG-TRL-ORG",
+      "nom_commercial": "Anycubic PETG Translucent - Orange Translucide",
+      "short_name": "Orange Translucide",
+      "gamme": "Anycubic PETG Translucent",
+      "translucent": true,
+      "code_hex": "#e06e26"
+    },
+    {
+      "id": "petg_tr_pink",
+      "sku_filament": "ANY-PETG-TRL-PNK",
+      "nom_commercial": "Anycubic PETG Translucent - Rose Translucide",
+      "short_name": "Rose Translucide",
+      "gamme": "Anycubic PETG Translucent",
+      "translucent": true,
+      "code_hex": "#d6608a"
+    },
+    {
+      "id": "petg_tr_purple",
+      "sku_filament": "ANY-PETG-TRL-PRP",
+      "nom_commercial": "Anycubic PETG Translucent - Violet Translucide",
+      "short_name": "Violet Translucide",
+      "gamme": "Anycubic PETG Translucent",
+      "translucent": true,
+      "code_hex": "#76449e"
+    },
+    {
+      "id": "petg_tr_brown",
+      "sku_filament": "ANY-PETG-TRL-BRN",
+      "nom_commercial": "Anycubic PETG Translucent - Marron Translucide",
+      "short_name": "Marron Translucide",
+      "gamme": "Anycubic PETG Translucent",
+      "translucent": true,
+      "code_hex": "#754b32"
+    }
+  ]
+}
