@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>CUBO 2 — Configurateur 3D | 5426 Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;600;700&family=Jacquard+12&family=Source+Sans+3:wght@400;500;600;700&family=UnifrakturMaguntia&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="./bundle.js"></script>
+    <link rel="stylesheet" crossorigin href="./asset-index.css">
+  </head>
+  <body>
+    <div id="app" class="app-layout">
+      <main class="stage-area">
+        <div id="viewport" class="viewport"></div>
+
+        <div id="loader" class="loader-overlay">
+          <div class="spinner"></div>
+          <span>Chargement de la scène 3D CUBO 2…</span>
+        </div>
+
+        <div class="cam-bar" role="toolbar" aria-label="Vues caméra">
+          <button class="cam-pill active" data-cam="three_quarter">3/4 Studio</button>
+          <button class="cam-pill" data-cam="front">Face</button>
+          <button class="cam-pill" data-cam="profile">Profil</button>
+          <button class="cam-pill" data-cam="top">Dessus</button>
+        </div>
+
+        <div class="orbit-hint">Glisser pour pivoter • Molette pour zoomer</div>
+      </main>
+
+      <aside id="panel" class="config-panel"></aside>
+    </div>
+  </body>
+</html>
