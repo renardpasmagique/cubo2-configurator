@@ -1348,9 +1348,17 @@ html.sf3d-dark .photo-nav-btn {
 @media (max-width: 900px) {
   .app-layout,
   #sf3d-cubo2-root .app-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: 36dvh 1fr;
-    height: calc(100dvh - var(--sf3d-header-h, 76px));
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100dvh - var(--sf3d-header-h, 76px));
+    overflow: visible;
+  }
+
+  .stage-area {
+    height: 46dvh;
+    min-height: 290px;
+    flex-shrink: 0;
   }
 
   .brand-row {
@@ -1366,7 +1374,13 @@ html.sf3d-dark .photo-nav-btn {
   .config-panel {
     border-left: none;
     border-top: 1px solid var(--border);
-    min-height: 0;
+    height: auto;
+    overflow: visible;
+  }
+
+  .steps-scroll {
+    overflow: visible;
+    padding: 14px 16px;
   }
 
   .photo-stage {
@@ -1430,12 +1444,6 @@ html.sf3d-dark .photo-nav-btn {
     gap: 8px;
   }
 
-  .dim-readout {
-    bottom: 52px;
-    font-size: 11px;
-    padding: 4px 9px;
-  }
-
   .orbit-hint {
     display: none;
   }
@@ -1443,6 +1451,9 @@ html.sf3d-dark .photo-nav-btn {
   .cam-bar {
     bottom: 8px;
     padding: 3px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: calc(100% - 16px);
   }
 
   .cam-pill {
@@ -1492,6 +1503,54 @@ html.sf3d-dark .photo-nav-btn {
 .similar-card:hover {
   border-color: var(--text);
   background: var(--surface);
+}
+
+.cubo-gallery-btn {
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: zoom-in;
+  overflow: hidden;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.cubo-gallery-btn:hover {
+  border-color: var(--text);
+  transform: translateY(-1px);
+}
+
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  background: rgba(15, 15, 16, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 64px 64px;
+}
+
+.lightbox-img {
+  max-width: 100%;
+  max-height: 82vh;
+  object-fit: contain;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+}
+
+.lightbox-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .similar-card-title {

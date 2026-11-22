@@ -163,7 +163,6 @@ const APP_MARKUP = `
         <button class="cam-pill" data-cam="profile">Profil</button>
         <button class="cam-pill" data-cam="top">Dessus</button>
       </div>
-      <div id="dim-readout" class="dim-readout is-hidden" aria-live="polite"></div>
       <div class="orbit-hint" id="orbit-hint">Glisser pour pivoter • Molette pour zoomer</div>
     </main>
     <aside id="panel" class="config-panel"></aside>
@@ -491,7 +490,6 @@ if (psHomeRoot && !psProductRoot) {
     );
 
     let showDim = false;
-    const dimReadoutEl = document.getElementById('dim-readout');
     const camBarEl = document.getElementById('cam-bar');
     let dimBtn: HTMLButtonElement | null = null;
     if (camBarEl) {
@@ -504,24 +502,10 @@ if (psHomeRoot && !psProductRoot) {
       camBarEl.appendChild(dimBtn);
     }
 
-    const updateDimReadout = () => {
-      if (!dimReadoutEl) return;
-      if (!showDim) {
-        dimReadoutEl.classList.add('is-hidden');
-        return;
-      }
-      const d = viewer.getDimensionsCm();
-      if (d.heightCm > 0) {
-        dimReadoutEl.textContent = `H ${d.heightCm.toFixed(1)} × L ${d.widthCm.toFixed(1)} × P ${d.depthCm.toFixed(1)} cm`;
-        dimReadoutEl.classList.remove('is-hidden');
-      }
-    };
-
     dimBtn?.addEventListener('click', () => {
       showDim = !showDim;
       dimBtn?.classList.toggle('active', showDim);
       viewer.setDimensionsVisible(showDim);
-      updateDimReadout();
     });
 
     const ui = new ConfiguratorUI(
@@ -531,7 +515,6 @@ if (psHomeRoot && !psProductRoot) {
         onConfigChange: (cfg) => {
           currentConfig = cfg;
           viewer.applyConfig(cfg);
-          updateDimReadout();
         },
         onCameraPreset: (preset) => {
           document.querySelectorAll('[data-cam]').forEach((b) => {
@@ -545,7 +528,6 @@ if (psHomeRoot && !psProductRoot) {
           ui.setConfig(currentConfig);
           viewer.applyConfig(currentConfig);
           viewer.setCameraPreset('three_quarter');
-          updateDimReadout();
         },
         onOpenHome: () => {
           openHomeScreen();
