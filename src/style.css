@@ -1356,9 +1356,23 @@ html.sf3d-dark .photo-nav-btn {
   }
 
   .stage-area {
-    height: 46dvh;
-    min-height: 290px;
+    position: sticky;
+    top: var(--sf3d-header-h, 56px);
+    z-index: 15;
+    height: 36dvh;
+    min-height: 230px;
     flex-shrink: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .step-card.is-open .step-header {
+    background: var(--accent-1);
+    font-weight: 700;
+  }
+
+  .step-header {
+    min-height: 48px;
   }
 
   .brand-row {

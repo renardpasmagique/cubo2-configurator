@@ -418,6 +418,20 @@ if (psHomeRoot && !psProductRoot) {
         hornViewer.setCameraPreset(btn.dataset.cam as CameraPreset);
       });
     });
+
+    let showHornDim = false;
+    const hornDimBtn = document.createElement('button');
+    hornDimBtn.type = 'button';
+    hornDimBtn.id = 'btn-toggle-dim';
+    hornDimBtn.className = 'cam-pill';
+    hornDimBtn.title = 'Afficher les dimensions en direct (H × L × P)';
+    hornDimBtn.textContent = 'Cotation';
+    camBarEl.appendChild(hornDimBtn);
+    hornDimBtn.addEventListener('click', () => {
+      showHornDim = !showHornDim;
+      hornDimBtn.classList.toggle('active', showHornDim);
+      hornViewer.setDimensionsVisible(showHornDim);
+    });
   } else {
     const viewportEl = document.getElementById('viewport')!;
     const panelEl = document.getElementById('panel')!;
