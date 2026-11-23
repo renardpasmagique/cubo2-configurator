@@ -214,16 +214,25 @@ export class FileProductUI {
 
     const hasPrintedOption = Boolean(this.spec.printedProductId && this.spec.printedPriceText);
 
+    const showColorMenu = !hasPrintedOption || this.format === 'printed';
+
     const steps = [
+      ...(showColorMenu
+        ? [
+            {
+              id: 4,
+              title: 'Couleur du filament PETG',
+              badge: this.activeColor.name,
+            },
+          ]
+        : []),
       {
         id: 1,
-        title: hasPrintedOption ? 'Format & Aperçu 3D / Photos' : 'Aperçu 3D & Galerie Photos',
+        title: 'Aperçu 3D & Galerie Photos',
         badge:
-          this.format === 'printed'
-            ? 'Imprimé 3D'
-            : this.viewMode === '3d'
-              ? 'Fichiers 3D'
-              : `Photo ${this.activePhotoIdx + 1}/${Math.max(1, this.photos.length)}`,
+          this.viewMode === '3d'
+            ? 'Modèle 3D'
+            : `Photo ${this.activePhotoIdx + 1}/${Math.max(1, this.photos.length)}`,
       },
       { id: 2, title: 'Caractéristiques Acoustiques', badge: this.spec.dispersion.split(' ')[0] },
       {
@@ -303,6 +312,17 @@ export class FileProductUI {
           </div>
           <div class="price-value">${this.getCurrentPriceText()}</div>
         </div>
+        ${
+          showColorMenu
+            ? `
+          <button type="button" class="active-color-bar" id="btn-open-color-menu">
+            <span class="active-color-dot" style="background:${this.activeColor.hex}"></span>
+            <span class="active-color-text">Couleur : <strong>${this.activeColor.nom_commercial || this.activeColor.name}</strong></span>
+            <span class="active-color-cta">Choisir →</span>
+          </button>
+        `
+            : ''
+        }
 
         ${
           this.cartStatus.type !== 'idle'
@@ -334,8 +354,6 @@ export class FileProductUI {
   }
 
   private renderStepBody(stepId: number): string {
-    const hasPrintedOption = Boolean(this.spec.printedProductId && this.spec.printedPriceText);
-
     switch (stepId) {
       case 1:
         return `
@@ -378,10 +396,10 @@ export class FileProductUI {
           `
               : ''
           }
+        `;
 
-          ${
-            !hasPrintedOption || this.format === 'printed'
-              ? `
+      case 4:
+        return `
           <div class="control-group">
             <label class="control-label">Filament — <strong>${this.activeColor.nom_commercial || this.activeColor.name}</strong></label>
             <div class="sub-label">Classique</div>
@@ -417,9 +435,6 @@ export class FileProductUI {
                 .join('')}
             </div>
           </div>
-          `
-              : ''
-          }
         `;
 
       case 2:
@@ -475,6 +490,12 @@ export class FileProductUI {
         this.activeStep = this.activeStep === id ? 0 : id;
         this.render();
       });
+    });
+
+    this.root.querySelector('#btn-open-color-menu')?.addEventListener('click', () => {
+      this.activeStep = 4;
+      this.render();
+      this.root.querySelector('[data-step="4"]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 
     this.root.querySelectorAll<HTMLElement>('[data-purchase-format]').forEach((btn) => {
@@ -573,6 +594,7 @@ export class FileProductUI {
       '#add-to-cart-or-refresh [data-button-action="add-to-cart"]'
     );
 
+    let savedCustomizationId = 0;
     if (this.format === 'printed' && win.SF3D_SAVE_URL) {
       try {
         const saveRes = await fetch(win.SF3D_SAVE_URL, {
@@ -597,8 +619,18 @@ export class FileProductUI {
           }),
         });
         const saveJson = await saveRes.json().catch(() => null);
-        if (saveJson && saveJson.id_customization && nativeCustId) {
-          nativeCustId.value = String(saveJson.id_customization);
+        if (saveJson && saveJson.id_customization) {
+          savedCustomizationId = Number(saveJson.id_customization);
+          if (nativeCustId) {
+            nativeCustId.value = String(savedCustomizationId);
+          } else if (nativeForm) {
+            const hiddenCust = document.createElement('input');
+            hiddenCust.type = 'hidden';
+            hiddenCust.name = 'id_customization';
+            hiddenCust.id = 'product_customization_id';
+            hiddenCust.value = String(savedCustomizationId);
+            nativeForm.appendChild(hiddenCust);
+          }
         }
       } catch {
         // Non-blocking: continue adding to cart
@@ -638,6 +670,9 @@ export class FileProductUI {
         formData.set('qty', String(this.qty));
         formData.set('add', '1');
         formData.set('action', 'update');
+        if (savedCustomizationId > 0) {
+          formData.set('id_customization', String(savedCustomizationId));
+        }
         formData.set('sf3d_filament_sku', this.activeColor.sku_filament || '');
         formData.set('sf3d_filament_name', this.activeColor.nom_commercial || this.activeColor.name);
         formData.set('sf3d_filament_gamme', this.activeColor.gamme || '');

@@ -615,78 +615,118 @@ export class ConfiguratorUI {
   }
 
   private renderQuoteModal(_total: number): string {
-    const summary = buildOrderTextSummary(this.config);
+    const mf = METAL_FINISHES.find((m) => m.id === this.config.frontPlate.metalFinish);
+    const horn = HORN_MODELS.find((h) => h.id === this.config.hornModel.type);
+    const mount = MOUNT_OPTIONS.find((m) => m.id === this.config.mount.type);
+
+    const facadeLabel =
+      this.config.frontPlate.mode === 'none'
+        ? 'Façade enfoncée (vis apparentes)'
+        : this.config.frontPlate.mode === 'wood'
+          ? 'Façade bois affleurante 20 mm'
+          : `Plaque métal (${mf?.name ?? this.config.frontPlate.metalFinish})`;
+
+    const caissonLabel =
+      this.config.bodyFinish.type === 'plywood'
+        ? 'Contreplaqué Bouleau verni satiné'
+        : `Peinture ${this.config.bodyFinish.surface === 'matte' ? 'Mate' : 'Satinée'} — ${this.config.bodyFinish.colorName}`;
+
+    const rows: Array<[string, string]> = [
+      ['Arêtes', this.config.edges === 'raw' ? 'Brutes' : 'Arrondies'],
+      ['Caisson', caissonLabel],
+      ['Façade', `${facadeLabel} · ${this.config.frontFaceColor.colorName}`],
+      ['Visserie HP', this.config.screwColor === 'silver' ? 'Argentée' : 'Noire'],
+      ['Pavillon', `${horn?.name ?? this.config.hornModel.type}`],
+      [
+        'Filament Pavillon',
+        `${this.config.hornModel.colorName}${this.config.hornModel.skuFilament ? ` (${this.config.hornModel.skuFilament})` : ''}`,
+      ],
+      ['Piètement', mount?.name ?? this.config.mount.type],
+      [
+        'Plaque bornier',
+        `${this.config.badge.plateColorName}${this.config.badge.text.trim() ? ` · Texte « ${this.config.badge.text.trim()} » (${this.config.badge.textColorName})` : ' · Standard'}`,
+      ],
+    ];
 
     return `
       <div class="modal-backdrop" id="modal-backdrop">
-        <div class="modal-card modal-quote">
+        <div class="modal-card modal-wide modal-quote">
           <div class="modal-head">
-            <h2>Demander un devis — CUBO 2</h2>
-            <button class="btn-icon" id="btn-close-modal">✕</button>
+            <div>
+              <h2>Demande de devis — CUBO 2</h2>
+              <p class="quote-subtitle">Fabrication artisanale sur commande · Réponse sous 24–48 h</p>
+            </div>
+            <button class="btn-icon" id="btn-close-modal" title="Fermer">✕</button>
           </div>
 
           <form id="quote-contact-form" class="quote-contact-form">
-            <div class="quote-form-title">Vos coordonnées pour être recontacté</div>
-            <div class="quote-form-grid">
-              <div class="form-field">
-                <label for="quote-name">Nom &amp; Prénom *</label>
-                <input
-                  id="quote-name"
-                  class="text-input"
-                  type="text"
-                  required
-                  placeholder="Votre nom"
-                  value="${this.customerForm.name.replace(/"/g, '&quot;')}"
-                />
+            <div class="quote-layout-2col">
+              <div class="quote-summary-col">
+                ${
+                  this.quoteScreenshot
+                    ? `
+                  <div class="quote-visual-box">
+                    <img src="${this.quoteScreenshot}" alt="Aperçu 3D CUBO 2 configurée" class="quote-preview-img" />
+                    <a class="quote-dl-link" href="${this.quoteScreenshot}" download="cubo2-configuration.png">
+                      Télécharger l'aperçu (.png) ↓
+                    </a>
+                  </div>
+                `
+                    : ''
+                }
+                <div class="quote-section-title">Fiche technique de votre configuration</div>
+                <dl class="quote-spec-list">
+                  ${rows.map(([k, v]) => `<div class="quote-spec-row"><dt>${k}</dt><dd>${v}</dd></div>`).join('')}
+                </dl>
               </div>
-              <div class="form-field">
-                <label for="quote-email">Adresse e-mail *</label>
-                <input
-                  id="quote-email"
-                  class="text-input"
-                  type="email"
-                  required
-                  placeholder="exemple@domaine.fr"
-                  value="${this.customerForm.email.replace(/"/g, '&quot;')}"
-                />
-              </div>
-              <div class="form-field">
-                <label for="quote-phone">Numéro de téléphone *</label>
-                <input
-                  id="quote-phone"
-                  class="text-input"
-                  type="tel"
-                  required
-                  placeholder="06 00 00 00 00"
-                  value="${this.customerForm.phone.replace(/"/g, '&quot;')}"
-                />
-              </div>
-              <div class="form-field">
-                <label for="quote-message">Précisions / Message (optionnel)</label>
-                <input
-                  id="quote-message"
-                  class="text-input"
-                  type="text"
-                  placeholder="Délai souhaité, quantité, question…"
-                  value="${this.customerForm.message.replace(/"/g, '&quot;')}"
-                />
-              </div>
-            </div>
 
-            <div class="quote-grid">
-              ${
-                this.quoteScreenshot
-                  ? `
-                <div class="quote-visual">
-                  <img src="${this.quoteScreenshot}" alt="Aperçu 3D CUBO 2 configurée" class="quote-preview-img" />
-                  <a class="btn-secondary btn-sm" href="${this.quoteScreenshot}" download="cubo2-configuration.png">
-                    Télécharger le visuel (.png)
-                  </a>
+              <div class="quote-fields-col">
+                <div class="quote-section-title">Vos coordonnées</div>
+                <div class="quote-fields-stack">
+                  <div class="form-field">
+                    <label for="quote-name">Nom &amp; Prénom *</label>
+                    <input
+                      id="quote-name"
+                      class="text-input"
+                      type="text"
+                      required
+                      placeholder="Votre nom complet"
+                      value="${this.customerForm.name.replace(/"/g, '&quot;')}"
+                    />
+                  </div>
+                  <div class="form-field">
+                    <label for="quote-email">Adresse e-mail *</label>
+                    <input
+                      id="quote-email"
+                      class="text-input"
+                      type="email"
+                      required
+                      placeholder="exemple@domaine.fr"
+                      value="${this.customerForm.email.replace(/"/g, '&quot;')}"
+                    />
+                  </div>
+                  <div class="form-field">
+                    <label for="quote-phone">Numéro de téléphone *</label>
+                    <input
+                      id="quote-phone"
+                      class="text-input"
+                      type="tel"
+                      required
+                      placeholder="06 00 00 00 00"
+                      value="${this.customerForm.phone.replace(/"/g, '&quot;')}"
+                    />
+                  </div>
+                  <div class="form-field">
+                    <label for="quote-message">Quantité, ville / code postal &amp; précisions</label>
+                    <textarea
+                      id="quote-message"
+                      class="text-input quote-textarea"
+                      rows="3"
+                      placeholder="Ex : 1 paire (2 enceintes), livraison 45000 Orléans, délai souhaité…"
+                    >${this.customerForm.message.replace(/</g, '&lt;')}</textarea>
+                  </div>
                 </div>
-              `
-                  : ''
-              }
-              <pre class="quote-pre">${summary}</pre>
+              </div>
             </div>
 
             ${
@@ -697,14 +737,14 @@ export class ConfiguratorUI {
             ${this.copyToast ? `<div class="copy-toast">${this.copyToast}</div>` : ''}
 
             <div class="modal-actions">
-              <button type="button" class="btn-secondary" id="btn-copy-text">Copier le descriptif</button>
+              <button type="button" class="btn-secondary" id="btn-copy-text">Copier la fiche</button>
               <button
                 type="submit"
                 class="btn-primary"
                 id="btn-submit-quote"
                 ${this.quoteStatus.type === 'sending' ? 'disabled' : ''}
               >
-                ${this.quoteStatus.type === 'sending' ? 'Envoi en cours…' : 'Envoyer ma demande de devis →'}
+                ${this.quoteStatus.type === 'sending' ? 'Envoi en cours…' : 'Envoyer la demande de devis →'}
               </button>
             </div>
           </form>
