@@ -316,6 +316,71 @@ export function createDefaultConfig(): Cubo2Config {
   };
 }
 
+export function createRandomConfig(): Cubo2Config {
+  const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+  const edges: EdgeType = pick(['raw', 'rounded']);
+  const isPlywood = Math.random() < 0.45;
+  const paint = pick(PAINT_COLORS);
+  const surface: SurfaceFinish = pick(['matte', 'satin']);
+  const customFace = Math.random() < 0.28;
+  const facePaint = pick(PAINT_COLORS);
+  const plateMode: FrontPlateMode = pick(['none', 'wood', 'metal']);
+  const mf = pick(METAL_FINISHES);
+  const hornOpt = pick(HORN_MODELS);
+  const hornPetg = pick(PETG_COLORS);
+  const mountOpt = pick(MOUNT_OPTIONS);
+  const badgePetg = pick(PETG_COLORS);
+  const badgeText = pick(PLAQUE_TEXT_COLORS);
+
+  return {
+    basePrice: BASE_PRICE,
+    edges,
+    bodyFinish: {
+      type: isPlywood ? 'plywood' : 'solid',
+      surface,
+      color: isPlywood ? null : paint.hex,
+      colorName: isPlywood ? 'Contreplaqué Bouleau' : paint.name,
+      priceDelta: isPlywood ? 0 : 90,
+    },
+    frontFaceColor: {
+      mode: customFace ? 'custom' : 'match_body',
+      color: customFace ? facePaint.hex : null,
+      colorName: customFace ? facePaint.name : 'Identique au corps',
+      priceDelta: customFace ? 55 : 0,
+    },
+    frontPlate: {
+      mode: plateMode,
+      metalFinish: mf.id,
+      priceDelta: plateMode === 'wood' ? WOOD_PLATE_PRICE : plateMode === 'metal' ? mf.priceDelta : 0,
+    },
+    screwColor: pick(['silver', 'black']),
+    hornModel: {
+      type: hornOpt.id,
+      skuFilament: hornPetg.sku_filament || '',
+      color: hornPetg.hex,
+      colorName: hornPetg.nom_commercial || hornPetg.name,
+      gamme: hornPetg.gamme || '',
+      translucent: Boolean(hornPetg.translucent),
+      priceDelta: hornOpt.priceDelta,
+    },
+    mount: {
+      type: mountOpt.id,
+      priceDelta: mountOpt.priceDelta,
+    },
+    badge: {
+      enabled: true,
+      text: '',
+      plateSkuFilament: badgePetg.sku_filament || '',
+      plateColor: badgePetg.hex,
+      plateColorName: badgePetg.nom_commercial || badgePetg.name,
+      plateTranslucent: Boolean(badgePetg.translucent),
+      textColor: badgeText.hex,
+      textColorName: badgeText.name,
+      priceDelta: 0,
+    },
+  };
+}
+
 export function calculateTotalPrice(config: Cubo2Config): number {
   const edgeDelta = EDGE_PRICES[config.edges];
   return (
