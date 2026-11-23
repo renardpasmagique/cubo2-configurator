@@ -112,7 +112,10 @@ export function initThemeAndPortfolioLinks(): void {
 
   // Ensure #mobileMenu (.ps-mainmenu__mobile) is never blank when opened on mobile
   const mobileDrawerNav = document.querySelector('#mobileMenu .ps-mainmenu__mobile');
-  if (mobileDrawerNav && mobileDrawerNav.querySelectorAll('a').length === 0) {
+  const hasVisibleDrawerLink = mobileDrawerNav
+    ? Array.from(mobileDrawerNav.querySelectorAll('a')).some((a) => (a.textContent || '').trim().length > 0)
+    : false;
+  if (mobileDrawerNav && !hasVisibleDrawerLink && !mobileDrawerNav.querySelector('.sf3d-mobile-nav-list')) {
     const sourceLinks = Array.from(
       document.querySelectorAll<HTMLAnchorElement>('#header .ps-mainmenu a, #header .main-menu a')
     );
