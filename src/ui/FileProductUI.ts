@@ -297,29 +297,16 @@ export class FileProductUI {
         `
             : ''
         }
+        ${
+          !hasPrintedOption
+            ? `
         <div class="price-row-main">
           <div>
-            <div class="price-label">${
-              this.format === 'printed'
-                ? 'Pavillon Imprimé 3D (Vendu à l\'unité)'
-                : 'Fichiers 3D (.STL & .STEP)'
-            }</div>
-            <div class="price-base-note">${
-              this.format === 'printed'
-                ? `${this.activeColor.nom_commercial || this.activeColor.name} (${this.activeColor.sku_filament || ''})`
-                : 'Téléchargement immédiat — Licence 5426 Studio'
-            }</div>
+            <div class="price-label">Fichiers 3D (.STL &amp; .STEP)</div>
+            <div class="price-base-note">Téléchargement immédiat — Licence 5426 Studio</div>
           </div>
           <div class="price-value">${this.getCurrentPriceText()}</div>
         </div>
-        ${
-          showColorMenu
-            ? `
-          <button type="button" class="active-color-bar" id="btn-open-color-menu">
-            <span class="active-color-dot" style="background:${this.activeColor.hex}"></span>
-            <span class="active-color-text">Couleur : <strong>${this.activeColor.nom_commercial || this.activeColor.name}</strong></span>
-            <span class="active-color-cta">Choisir →</span>
-          </button>
         `
             : ''
         }
@@ -401,7 +388,7 @@ export class FileProductUI {
       case 4:
         return `
           <div class="control-group">
-            <label class="control-label">Filament — <strong>${this.activeColor.nom_commercial || this.activeColor.name}</strong></label>
+            <label class="control-label">Couleur — <strong>${this.activeColor.name}</strong></label>
             <div class="sub-label">Classique</div>
             <div class="swatch-grid">
               ${PETG_COLORS.filter((c) => !c.translucent)
@@ -411,7 +398,7 @@ export class FileProductUI {
                   type="button"
                   class="swatch ${this.activeColor.id === c.id ? 'active' : ''}"
                   style="background:${c.hex}"
-                  title="${c.nom_commercial || c.name} (${c.sku_filament || ''})"
+                  title="${c.name}"
                   data-sim-color="${c.id}"
                 ></button>
               `
@@ -427,7 +414,7 @@ export class FileProductUI {
                   type="button"
                   class="swatch is-translucent ${this.activeColor.id === c.id ? 'active' : ''}"
                   style="background:${c.hex}"
-                  title="${c.nom_commercial || c.name} (${c.sku_filament || ''})"
+                  title="${c.name}"
                   data-sim-color="${c.id}"
                 ></button>
               `

@@ -50,7 +50,7 @@ export class ConfiguratorUI {
     name: '',
     email: '',
     phone: '',
-    quantity: '1 pièce',
+    quantity: '1 paire (2 enceintes)',
     location: '',
     message: '',
   };
@@ -165,8 +165,8 @@ export class ConfiguratorUI {
         <div class="price-summary">
           <div class="price-row-main">
             <div>
-              <div class="price-label">Tarif estimé TTC (à l'unité)</div>
-              <div class="price-base-note">Base : ${formatEuro(this.config.basePrice)} TTC / pièce</div>
+              <div class="price-label">Tarif estimé TTC (la paire)</div>
+              <div class="price-base-note">À partir de ${formatEuro(this.config.basePrice)} TTC la paire</div>
             </div>
             <div class="price-value">${formatEuro(total)}</div>
           </div>
@@ -644,7 +644,7 @@ export class ConfiguratorUI {
 
     const caissonLabel =
       this.config.bodyFinish.type === 'plywood'
-        ? 'Contreplaqué Bouleau verni satiné'
+        ? 'Contreplaqué verni satiné'
         : `Peinture ${this.config.bodyFinish.surface === 'matte' ? 'Mate' : 'Satinée'} — ${this.config.bodyFinish.colorName}`;
 
     const fmtDelta = (d: number) => (d > 0 ? `+${formatEuro(d)}` : '+0 €');
@@ -672,7 +672,7 @@ export class ConfiguratorUI {
           <div class="modal-head">
             <div>
               <h2>Demande de devis — CUBO 2</h2>
-              <p class="quote-subtitle">Total estimé : <strong>${formatEuro(total)} TTC</strong> (à l'unité) · Base ${formatEuro(this.config.basePrice)} TTC</p>
+              <p class="quote-subtitle">Total estimé : <strong>${formatEuro(total)} TTC</strong> (la paire) · À partir de ${formatEuro(this.config.basePrice)} TTC</p>
             </div>
             <button class="btn-icon" id="btn-close-modal" title="Fermer">✕</button>
           </div>
@@ -700,7 +700,7 @@ export class ConfiguratorUI {
                         `<div class="quote-spec-row quote-spec-row--3col"><dt>${k}</dt><dd>${v}</dd><span class="quote-spec-delta">${d}</span></div>`
                     )
                     .join('')}
-                  <div class="quote-spec-row quote-spec-row--total"><dt>Total estimé (unité)</dt><dd></dd><span class="quote-spec-delta">${formatEuro(total)} TTC</span></div>
+                  <div class="quote-spec-row quote-spec-row--total"><dt>Total estimé (la paire)</dt><dd></dd><span class="quote-spec-delta">${formatEuro(total)} TTC</span></div>
                 </dl>
               </div>
 
@@ -1034,7 +1034,7 @@ export class ConfiguratorUI {
         const tr = btn.dataset.hornTr === '1';
         const opt = PETG_COLORS.find((c) => c.hex === hex && Boolean(c.translucent) === tr);
         this.config.hornModel.color = hex;
-        this.config.hornModel.colorName = opt?.nom_commercial || btn.dataset.hornName!;
+        this.config.hornModel.colorName = opt?.name || btn.dataset.hornName!;
         this.config.hornModel.skuFilament = opt?.sku_filament || '';
         this.config.hornModel.gamme = opt?.gamme || '';
         this.config.hornModel.translucent = tr;
@@ -1071,7 +1071,7 @@ export class ConfiguratorUI {
         const tr = btn.dataset.plaqueTr === '1';
         const opt = PETG_COLORS.find((c) => c.hex === hex && Boolean(c.translucent) === tr);
         this.config.badge.plateColor = hex;
-        this.config.badge.plateColorName = opt?.nom_commercial || btn.dataset.plaqueCname!;
+        this.config.badge.plateColorName = opt?.name || btn.dataset.plaqueCname!;
         this.config.badge.plateSkuFilament = opt?.sku_filament || '';
         this.config.badge.plateTranslucent = tr;
         this.emitChange();
