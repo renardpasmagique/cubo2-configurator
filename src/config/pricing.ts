@@ -101,16 +101,56 @@ export interface MountOption {
   priceDelta: number;
 }
 
-export const SHOW_PRICING = false;
+export const SHOW_PRICING = true;
 
 export const BASE_PRICE = 1500;
 
+export const CUBO2_PRICING_MATRIX = {
+  product: 'CUBO 2',
+  basePrice: 1500,
+  currency: 'EUR',
+  unit: 'à l\'unité (TTC)',
+  pricingMatrix: {
+    cabinetEdge: {
+      raw: { label: 'Arête brute', delta: 0 },
+      rounded: { label: 'Arête arrondie', delta: 0 },
+    },
+    bodyFinish: {
+      plywood: { label: 'Contreplaqué', delta: 0 },
+      painted: { label: 'Peinture', delta: 0 },
+    },
+    frontBaffle: {
+      recessed_wood: { label: 'Façade bois enfoncée', delta: 0 },
+      flush_wood: { label: 'Façade bois affleurante', delta: 0 },
+      differentColorSurcharge: 30,
+      metal_anthracite_steel: { label: 'Plaque métal affleurante — Acier gris anthracite', delta: 100 },
+      metal_brushed_aluminium: { label: 'Plaque métal affleurante — Aluminium brossé', delta: 150 },
+      metal_raw_aluminium: { label: 'Plaque métal affleurante — Aluminium brut', delta: 150 },
+    },
+    horn: {
+      multicellular_2x5: { label: 'Pavillon multicellulaire 2×5', delta: 0 },
+      multicellular_3x4: { label: 'Pavillon multicellulaire 3×4', delta: 0 },
+      elliptical: { label: 'Pavillon acoustique elliptique', delta: 0 },
+      colorDelta: 0,
+    },
+    mobility: {
+      none: { label: 'Aucun piétement', delta: 0 },
+      casters: { label: 'Jeu de roulettes', delta: 30 },
+      custom_feet: { label: 'Pieds sur mesure', delta: 50 },
+    },
+    identificationPlate: {
+      enabled: { label: 'Plaque d\'identification personnalisée (Inclus)', delta: 0 },
+    },
+  },
+} as const;
+
 export const EDGE_PRICES: Record<EdgeType, number> = {
   raw: 0,
-  rounded: 65,
+  rounded: 0,
 };
 
-export const WOOD_PLATE_PRICE = 75;
+export const WOOD_PLATE_PRICE = 0;
+export const CUSTOM_FACE_COLOR_PRICE = 30;
 
 export const PAINT_COLORS: ColorOption[] = [
   // Blancs, Beiges & Nudes
@@ -160,7 +200,7 @@ export const METAL_FINISHES: MetalFinishOption[] = [
     hex: '#d8dce0',
     metalness: 0.92,
     roughness: 0.22,
-    priceDelta: 110,
+    priceDelta: 150,
   },
   {
     id: 'brushed_alu',
@@ -168,7 +208,7 @@ export const METAL_FINISHES: MetalFinishOption[] = [
     hex: '#c9cdd1',
     metalness: 0.88,
     roughness: 0.34,
-    priceDelta: 120,
+    priceDelta: 150,
   },
   {
     id: 'anthracite_steel',
@@ -176,7 +216,7 @@ export const METAL_FINISHES: MetalFinishOption[] = [
     hex: '#3a3d42',
     metalness: 0.78,
     roughness: 0.42,
-    priceDelta: 135,
+    priceDelta: 100,
   },
 ];
 
@@ -203,7 +243,7 @@ export const HORN_MODELS: HornOption[] = [
     dimensions: '349 × 344 × 292 mm',
     usage: 'Couverture verticale étendue, écoute debout / grande salle',
     url: 'https://www.5426.fr/5-5426-multicell-horn-3x4.html',
-    priceDelta: 45,
+    priceDelta: 0,
   },
   {
     id: 'oval',
@@ -215,7 +255,7 @@ export const HORN_MODELS: HornOption[] = [
     dimensions: '254 × 228 × 186 mm',
     usage: 'Encombrement compact, directivité douce et homogène',
     url: 'https://www.5426.fr/3-pavillon-acoustique-elliptique-5426-studio.html',
-    priceDelta: 30,
+    priceDelta: 0,
   },
 ];
 
@@ -251,18 +291,18 @@ export const MOUNT_OPTIONS: MountOption[] = [
     priceDelta: 0,
   },
   {
-    id: 'feet',
-    name: 'Pieds sur mesure',
-    description: '4 pieds usinés isolants (hauteur +42 mm)',
-    heightOffsetM: 0.042,
-    priceDelta: 85,
-  },
-  {
     id: 'castors',
     name: 'Jeu de roulettes',
     description: '4 roulettes pivotantes charge lourde (+78 mm)',
     heightOffsetM: 0.078,
-    priceDelta: 95,
+    priceDelta: 30,
+  },
+  {
+    id: 'feet',
+    name: 'Pieds sur mesure',
+    description: '4 pieds usinés isolants (hauteur +42 mm)',
+    heightOffsetM: 0.042,
+    priceDelta: 50,
   },
 ];
 
@@ -340,18 +380,18 @@ export function createRandomConfig(): Cubo2Config {
       surface,
       color: isPlywood ? null : paint.hex,
       colorName: isPlywood ? 'Contreplaqué Bouleau' : paint.name,
-      priceDelta: isPlywood ? 0 : 90,
+      priceDelta: 0,
     },
     frontFaceColor: {
-      mode: customFace ? 'custom' : 'match_body',
-      color: customFace ? facePaint.hex : null,
-      colorName: customFace ? facePaint.name : 'Identique au corps',
-      priceDelta: customFace ? 55 : 0,
+      mode: customFace && plateMode !== 'metal' ? 'custom' : 'match_body',
+      color: customFace && plateMode !== 'metal' ? facePaint.hex : null,
+      colorName: customFace && plateMode !== 'metal' ? facePaint.name : 'Identique au corps',
+      priceDelta: customFace && plateMode !== 'metal' ? CUSTOM_FACE_COLOR_PRICE : 0,
     },
     frontPlate: {
       mode: plateMode,
       metalFinish: mf.id,
-      priceDelta: plateMode === 'wood' ? WOOD_PLATE_PRICE : plateMode === 'metal' ? mf.priceDelta : 0,
+      priceDelta: plateMode === 'metal' ? mf.priceDelta : 0,
     },
     screwColor: pick(['silver', 'black']),
     hornModel: {
