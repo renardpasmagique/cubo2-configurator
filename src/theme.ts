@@ -93,12 +93,59 @@ export function initThemeAndPortfolioLinks(): void {
     headerRight.appendChild(makeThemeBtn('sf3d-header-theme-btn', 'sf3d-header-theme-btn'));
   }
 
-  const mobileAnchor =
-    document.querySelector('#_mobile_cart') ||
-    document.querySelector('#_mobile_user_info') ||
-    document.querySelector('#header .header-top__left')?.parentElement;
-  if (mobileAnchor && mobileAnchor.parentElement && !document.getElementById('sf3d-mobile-theme-btn')) {
+  const mobileTarget =
+    document.querySelector('.header-bottom .header-bottom__right') ||
+    document.querySelector('.header-bottom .header-block--cart')?.parentElement ||
+    document.querySelector('.header-bottom .container') ||
+    document.querySelector('.header-bottom');
+  if (mobileTarget && !document.getElementById('sf3d-mobile-theme-btn')) {
     const mobileBtn = makeThemeBtn('sf3d-mobile-theme-btn', 'sf3d-mobile-theme-btn');
-    mobileAnchor.parentElement.insertBefore(mobileBtn, mobileAnchor);
+    const cartOrFirst =
+      mobileTarget.querySelector('.header-block--cart, #_mobile_cart, .header-bottom__cart') ||
+      mobileTarget.firstChild;
+    if (cartOrFirst) {
+      mobileTarget.insertBefore(mobileBtn, cartOrFirst);
+    } else {
+      mobileTarget.appendChild(mobileBtn);
+    }
+  }
+
+  // Ensure #mobileMenu (.ps-mainmenu__mobile) is never blank when opened on mobile
+  const mobileDrawerNav = document.querySelector('#mobileMenu .ps-mainmenu__mobile');
+  if (mobileDrawerNav && mobileDrawerNav.querySelectorAll('a').length === 0) {
+    const sourceLinks = Array.from(
+      document.querySelectorAll<HTMLAnchorElement>('#header .ps-mainmenu a, #header .main-menu a')
+    );
+    const items: Array<{ label: string; href: string; external?: boolean }> = [];
+    const seen = new Set<string>();
+    for (const a of sourceLinks) {
+      const label = (a.textContent || '').trim();
+      const href = a.href;
+      if (!label || !href || seen.has(href)) continue;
+      seen.add(href);
+      items.push({ label, href, external: a.target === '_blank' });
+    }
+    if (items.length === 0) {
+      items.push(
+        { label: 'Produit', href: 'https://www.5426.fr/' },
+        { label: 'Portfolio', href: 'https://liampiecourt.fr', external: true },
+        { label: 'Instagram', href: 'https://www.instagram.com/5426_studio/', external: true }
+      );
+    }
+    const list = document.createElement('ul');
+    list.className = 'sf3d-mobile-nav-list';
+    for (const it of items) {
+      const li = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = it.href;
+      link.textContent = it.label;
+      if (it.external) {
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+      }
+      li.appendChild(link);
+      list.appendChild(li);
+    }
+    mobileDrawerNav.appendChild(list);
   }
 }
