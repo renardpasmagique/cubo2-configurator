@@ -98,6 +98,14 @@ export class Relica3ProductUI {
             `;
           })
           .join('')}
+        <div class="policy-bar" aria-label="Politiques et Licence 5426 Studio">
+          ${this.policies
+            .map(
+              (p) =>
+                `<a class="policy-pill" href="${p.url}" target="_blank" rel="noopener noreferrer">${p.label}</a>`
+            )
+            .join('')}
+        </div>
       </div>
 
       <div class="panel-footer">
@@ -124,15 +132,6 @@ export class Relica3ProductUI {
           <button type="button" class="btn-primary" id="btn-add-to-cart" ${this.cartStatus.type === 'adding' ? 'disabled' : ''}>
             ${this.cartStatus.type === 'adding' ? 'Ajout au panier…' : 'Ajouter au panier →'}
           </button>
-        </div>
-
-        <div class="policy-bar" aria-label="Politiques et Licence 5426 Studio">
-          ${this.policies
-            .map(
-              (p) =>
-                `<a class="policy-pill" href="${p.url}" target="_blank" rel="noopener noreferrer">${p.label}</a>`
-            )
-            .join('')}
         </div>
       </div>
 
