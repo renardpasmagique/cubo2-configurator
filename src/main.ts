@@ -325,6 +325,20 @@ if (psHomeRoot && !psProductRoot) {
         relicaViewer.setCameraPreset(btn.dataset.cam as CameraPreset);
       });
     });
+
+    let showRelicaDim = false;
+    const relicaDimBtn = document.createElement('button');
+    relicaDimBtn.type = 'button';
+    relicaDimBtn.id = 'btn-toggle-dim';
+    relicaDimBtn.className = 'cam-pill';
+    relicaDimBtn.title = 'Afficher les dimensions de la carte (L × l × H)';
+    relicaDimBtn.textContent = 'Cotation';
+    camBarEl.appendChild(relicaDimBtn);
+    relicaDimBtn.addEventListener('click', () => {
+      showRelicaDim = !showRelicaDim;
+      relicaDimBtn.classList.toggle('active', showRelicaDim);
+      relicaViewer.setDimensionsVisible(showRelicaDim);
+    });
   } else if (hornProduct) {
     const viewportEl = document.getElementById('viewport')!;
     const panelEl = document.getElementById('panel')!;

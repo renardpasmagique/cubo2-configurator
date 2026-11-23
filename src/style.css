@@ -685,7 +685,6 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(21, 21, 21, 0.55);
-  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -703,7 +702,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow: 0 20px 50px rgba(21, 21, 21, 0.2);
 }
 
 .modal-head {
@@ -1103,7 +1101,6 @@ body {
   border-radius: 0px;
   border: 1px solid var(--border);
   background: var(--surface);
-  box-shadow: 0 12px 36px rgba(21, 21, 21, 0.08);
 }
 
 .photo-nav-btn {
@@ -1356,11 +1353,9 @@ html.sf3d-dark .photo-nav-btn {
   }
 
   .stage-area {
-    position: sticky;
-    top: var(--sf3d-header-h, 56px);
-    z-index: 15;
-    height: 36dvh;
-    min-height: 230px;
+    position: relative;
+    top: auto;
+    height: auto;
     flex-shrink: 0;
     background: var(--bg);
     border-bottom: 1px solid var(--border);
@@ -1548,7 +1543,6 @@ html.sf3d-dark .photo-nav-btn {
   max-width: 100%;
   max-height: 82vh;
   object-fit: contain;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
 }
 
 .lightbox-bar {
@@ -1609,5 +1603,141 @@ html.sf3d-dark .photo-nav-btn {
 @media (max-width: 600px) {
   .similar-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+
+/* v0.2.5 - Smartphone : barre camera sous la 3D (ne masque plus les cotes) + panier remonte */
+@media (max-width: 900px) {
+  .stage-area {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stage-area .viewport {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+  }
+
+  .stage-area .cam-bar {
+    position: static;
+    transform: none;
+    left: auto;
+    bottom: auto;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    max-width: 100%;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 2px;
+    padding: 4px 8px;
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--surface);
+  }
+
+  .stage-area .cam-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .stage-area .cam-pill {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  .config-panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .config-panel .panel-header {
+    order: 0;
+  }
+
+  .config-panel .panel-footer {
+    order: 1;
+    position: static;
+    border-top: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .config-panel .steps-scroll {
+    order: 2;
+  }
+}
+
+
+/* v0.2.6 - Epuration industrielle, valeur d'etape, format STL/3D & scroll tactile mobile */
+.step-val {
+  margin-left: auto;
+  margin-right: 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 48%;
+}
+
+.format-segmented {
+  margin-bottom: 10px;
+}
+
+.format-segmented .seg-btn {
+  min-height: 48px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.format-segmented .seg-btn.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+.format-segmented .seg-btn.active .delta {
+  color: var(--bg);
+  opacity: 0.85;
+}
+
+html.sf3d-dark .format-segmented .seg-btn.active {
+  background: #f4f2ee !important;
+  color: #151515 !important;
+  border-color: #f4f2ee !important;
+}
+
+html.sf3d-dark .format-segmented .seg-btn.active .delta {
+  color: #151515 !important;
+}
+
+@media (max-width: 900px) {
+  .stage-area .viewport {
+    height: 40dvh;
+    min-height: 250px;
+    flex: 0 0 auto;
+  }
+
+  .stage-area .orbit-hint {
+    display: none !important;
+  }
+
+  .config-panel,
+  .config-panel .steps-scroll,
+  .config-panel .panel-footer {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .config-panel .steps-scroll {
+    overflow-y: auto;
   }
 }
