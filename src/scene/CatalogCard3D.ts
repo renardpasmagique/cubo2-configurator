@@ -396,7 +396,7 @@ export class CatalogCard3D {
 
     linkEl.style.position = 'relative';
     linkEl.style.display = 'block';
-    linkEl.style.background = '#ffffff';
+    linkEl.style.background = 'transparent';
     const pic = imgEl.closest('picture') || imgEl;
     (pic as HTMLElement).style.display = 'none';
     linkEl.appendChild(canvas2d);
