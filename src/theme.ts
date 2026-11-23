@@ -159,7 +159,24 @@ export function initThemeAndPortfolioLinks(): void {
     }
   });
 
-  // Add clean institutional & legal links bar right below "Produits de la même catégorie" (or in #footer)
+  // Translate English PrestaShop labels & simplify category heading
+  document.querySelectorAll<HTMLElement>('h2, h3, .h2, .products-section-title, .h4').forEach((h) => {
+    const txt = (h.textContent || '').trim();
+    if (/autres produits dans la m[êe]me cat[ée]gorie/i.test(txt)) {
+      h.textContent = 'Autres produits similaires';
+    } else if (/^featured products$/i.test(txt)) {
+      h.textContent = 'Nos créations';
+    }
+  });
+
+  document.querySelectorAll<HTMLAnchorElement>('a').forEach((a) => {
+    const txt = (a.textContent || '').trim();
+    if (/^all featured products/i.test(txt)) {
+      a.textContent = 'Voir tous les produits →';
+    }
+  });
+
+  // Add clean institutional & legal links bar right below "Autres produits similaires" (or in #footer)
   const sameCatSec =
     document.querySelector('.product-accessories, .category-products, .ps-categoryproducts') ||
     document.querySelector('#footer .container');

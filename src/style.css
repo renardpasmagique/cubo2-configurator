@@ -1531,7 +1531,7 @@ html.sf3d-dark .photo-nav-btn {
 .lightbox-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 10020;
+  z-index: 10080 !important;
   background: rgba(15, 15, 16, 0.92);
   display: flex;
   align-items: center;
