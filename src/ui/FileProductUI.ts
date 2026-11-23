@@ -159,7 +159,6 @@ export class FileProductUI {
   private activePhotoIdx = 0;
   private activeColor = PETG_COLORS[0];
   private qty = 1;
-  private showDescModal = false;
   private showSimilarModal = false;
   private cartStatus: { type: 'idle' | 'adding' | 'added' | 'error'; message: string } = {
     type: 'idle',
@@ -243,11 +242,7 @@ export class FileProductUI {
           <h1 class="product-title" style="font-size:21px;line-height:1.2">
             ${this.spec.title}
           </h1>
-          <div class="header-btns">
-            <button class="btn-icon" id="btn-file-desc" title="Descriptif technique">Descriptif</button>
-          </div>
         </div>
-        <div class="product-sub" style="margin-top:2px">${this.spec.subtitle}</div>
       </div>
 
       <div class="steps-scroll">
@@ -327,7 +322,6 @@ export class FileProductUI {
         </div>
       </div>
 
-      ${this.renderUniformDescriptionModal(this.showDescModal)}
       ${renderSimilarProductsModal(this.spec.digitalProductId, this.showSimilarModal)}
     `;
 
@@ -473,47 +467,6 @@ export class FileProductUI {
     }
   }
 
-  private renderUniformDescriptionModal(isOpen: boolean): string {
-    return `
-      <div class="modal-backdrop ${isOpen ? '' : 'is-hidden'}" id="file-desc-backdrop" aria-hidden="${!isOpen}">
-        <div class="modal-card modal-wide desc-modal-card">
-          <div class="modal-head">
-            <h2>${this.spec.title} — Fiche Technique</h2>
-            <button class="btn-icon" id="btn-close-file-desc">✕</button>
-          </div>
-          <div class="desc-content">
-            <p class="desc-lead">${this.spec.lead}</p>
-
-            <h3>1. Spécifications Acoustiques &amp; Mécaniques</h3>
-            <ul>
-              <li><strong>Architecture :</strong> ${this.spec.architecture}</li>
-              <li><strong>Dispersion nominale :</strong> ${this.spec.dispersion}</li>
-              <li><strong>Fréquence de coupure :</strong> ${this.spec.cutoffFreq}</li>
-              <li><strong>Compatibilité moteur :</strong> ${this.spec.throat}</li>
-              <li><strong>Dimensions :</strong> ${this.spec.dimensions}</li>
-            </ul>
-
-            <h3>2. Version Fichiers 3D (.STL &amp; .STEP — ${this.spec.digitalPriceText})</h3>
-            <ul>
-              ${this.spec.filesIncluded.map((f) => `<li>${f}</li>`).join('')}
-              ${this.spec.printSettings.map((s) => `<li>${s}</li>`).join('')}
-            </ul>
-
-            ${
-              this.spec.printedPriceText
-                ? `
-              <h3>3. Version Pavillon Imprimé 3D (${this.spec.printedPriceText})</h3>
-              <ul>
-                ${this.spec.printedSpecs.map((s) => `<li>${s}</li>`).join('')}
-              </ul>
-            `
-                : ''
-            }
-          </div>
-        </div>
-      </div>
-    `;
-  }
 
   private bindEvents(): void {
     this.root.querySelectorAll<HTMLElement>('[data-step]').forEach((btn) => {
@@ -532,22 +485,8 @@ export class FileProductUI {
       });
     });
 
-    this.root.querySelector('#btn-file-desc')?.addEventListener('click', () => {
-      this.showDescModal = true;
-      this.render();
-    });
 
-    this.root.querySelector('#btn-close-file-desc')?.addEventListener('click', () => {
-      this.showDescModal = false;
-      this.render();
-    });
 
-    this.root.querySelector('#file-desc-backdrop')?.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).id === 'file-desc-backdrop') {
-        this.showDescModal = false;
-        this.render();
-      }
-    });
 
     this.root.querySelector('#btn-similar')?.addEventListener('click', () => {
       this.showSimilarModal = true;

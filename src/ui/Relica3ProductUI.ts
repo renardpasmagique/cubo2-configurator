@@ -24,7 +24,6 @@ export class Relica3ProductUI {
   private viewMode: '3d' | 'photos' = '3d';
   private activePhotoIdx = 0;
   private qty = 1;
-  private showDescModal = false;
   private showSimilarModal = false;
   private cartStatus: { type: 'idle' | 'adding' | 'added' | 'error'; message: string } = {
     type: 'idle',
@@ -75,11 +74,7 @@ export class Relica3ProductUI {
           <h1 class="product-title" style="font-size:21px;line-height:1.2">
             RELICA 3
           </h1>
-          <div class="header-btns">
-            <button class="btn-icon" id="btn-relica-desc" title="Descriptif technique">Descriptif</button>
-          </div>
         </div>
-        <div class="product-sub" style="margin-top:2px">Carte filtre passif 3 voies (8 Ω / 150–200 W RMS)</div>
       </div>
 
       <div class="steps-scroll">
@@ -135,7 +130,6 @@ export class Relica3ProductUI {
         </div>
       </div>
 
-      ${this.renderDescriptionModal(this.showDescModal)}
       ${renderSimilarProductsModal(10, this.showSimilarModal)}
     `;
 
@@ -217,33 +211,6 @@ export class Relica3ProductUI {
     }
   }
 
-  private renderDescriptionModal(isOpen: boolean): string {
-    return `
-      <div class="modal-backdrop ${isOpen ? '' : 'is-hidden'}" id="relica-desc-backdrop" aria-hidden="${!isOpen}">
-        <div class="modal-card modal-wide desc-modal-card">
-          <div class="modal-head">
-            <h2>RELICA 3 — Carte filtre passif 3 voies (8 Ω)</h2>
-            <button class="btn-icon" id="btn-close-relica-desc">✕</button>
-          </div>
-          <div class="desc-content">
-            <p class="desc-lead">
-              Carte de filtrage audio passif 3 voies destinée aux enceintes acoustiques (systèmes 3 voies,
-              pavillons, caissons avec tête médium/aigu). Assemblée en France dans les ateliers de 5426 Studio.
-            </p>
-            <h3>Caractéristiques Techniques</h3>
-            <ul>
-              <li><strong>Filtrage :</strong> Passif 3 voies (Grave / Médium / Aigu) — Linkwitz-Riley 12 dB/octave.</li>
-              <li><strong>Fréquences de coupure :</strong> 300 Hz et 3 500 Hz.</li>
-              <li><strong>Tenue en puissance :</strong> 150–200 W RMS sous 8 Ω.</li>
-              <li><strong>Section aigu :</strong> Réseau d'atténuation L-Pad intégré.</li>
-              <li><strong>Conception PCB :</strong> Cuivre 2 oz finition or ENIG, pistes élargies, selfs à 90° anti-couplage magnétique, borniers haute intensité.</li>
-              <li><strong>Dimensions :</strong> 292 × 190 mm — Vendu à l'unité.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    `;
-  }
 
   private bindEvents(): void {
     this.root.querySelectorAll<HTMLElement>('[data-step]').forEach((btn) => {
@@ -254,22 +221,8 @@ export class Relica3ProductUI {
       });
     });
 
-    this.root.querySelector('#btn-relica-desc')?.addEventListener('click', () => {
-      this.showDescModal = true;
-      this.render();
-    });
 
-    this.root.querySelector('#btn-close-relica-desc')?.addEventListener('click', () => {
-      this.showDescModal = false;
-      this.render();
-    });
 
-    this.root.querySelector('#relica-desc-backdrop')?.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).id === 'relica-desc-backdrop') {
-        this.showDescModal = false;
-        this.render();
-      }
-    });
 
     this.root.querySelector('#btn-similar')?.addEventListener('click', () => {
       this.showSimilarModal = true;
