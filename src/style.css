@@ -1968,3 +1968,43 @@ html.sf3d-dark .format-segmented .seg-btn.active .delta {
   min-height: 76px;
   font-family: inherit;
 }
+
+
+/* v0.4.0 - Grille tarifaire dynamique et 6 etapes chiffrees dans la fiche de devis */
+.quote-spec-row--3col {
+  grid-template-columns: 92px 1fr auto;
+  align-items: baseline;
+}
+
+.quote-spec-delta {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.quote-spec-row--total {
+  grid-template-columns: 1fr auto;
+  border-bottom: none;
+  padding-top: 10px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border-strong);
+  font-size: 13.5px;
+}
+
+.quote-spec-row--total dt {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.quote-2fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 540px) {
+  .quote-2fields {
+    grid-template-columns: 1fr;
+  }
+}
