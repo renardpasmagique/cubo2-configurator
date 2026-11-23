@@ -2,6 +2,7 @@ import {
   buildOrderTextSummary,
   calculateTotalPrice,
   Cubo2Config,
+  CUSTOM_FACE_COLOR_PRICE,
   EDGE_PRICES,
   formatEuro,
   FrontPlateMode,
@@ -49,6 +50,8 @@ export class ConfiguratorUI {
     name: '',
     email: '',
     phone: '',
+    quantity: '1 pièce',
+    location: '',
     message: '',
   };
 
@@ -162,8 +165,8 @@ export class ConfiguratorUI {
         <div class="price-summary">
           <div class="price-row-main">
             <div>
-              <div class="price-label">Tarif estimé TTC</div>
-              <div class="price-base-note">Base à partir de ${formatEuro(this.config.basePrice)}</div>
+              <div class="price-label">Tarif estimé TTC (à l'unité)</div>
+              <div class="price-base-note">Base : ${formatEuro(this.config.basePrice)} TTC / pièce</div>
             </div>
             <div class="price-value">${formatEuro(total)}</div>
           </div>
@@ -249,7 +252,7 @@ export class ConfiguratorUI {
                 Contreplaqué ${SHOW_PRICING ? '<span class="delta">Inclus</span>' : ''}
               </button>
               <button class="seg-btn ${this.config.bodyFinish.type === 'solid' ? 'active' : ''}" data-body-type="solid">
-                Peinture ${SHOW_PRICING ? '<span class="delta">+90 €</span>' : ''}
+                Peinture ${SHOW_PRICING ? '<span class="delta">Inclus</span>' : ''}
               </button>
             </div>
           </div>
@@ -302,14 +305,14 @@ export class ConfiguratorUI {
                   <span class="opt-name">Façade bois affleurante</span>
                   <span class="opt-sub">20 mm, vis masquées</span>
                 </div>
-                ${SHOW_PRICING ? `<span class="opt-price">+${formatEuro(WOOD_PLATE_PRICE)}</span>` : ''}
+                ${SHOW_PRICING ? '<span class="opt-price">Inclus</span>' : ''}
               </button>
               <button class="option-row ${this.config.frontPlate.mode === 'metal' ? 'active' : ''}" data-plate-mode="metal">
                 <div class="opt-col">
                   <span class="opt-name">Plaque métal affleurante</span>
                   <span class="opt-sub">Vis masquées</span>
                 </div>
-                ${SHOW_PRICING ? '<span class="opt-price">+110–135 €</span>' : ''}
+                ${SHOW_PRICING ? '<span class="opt-price">+100–150 €</span>' : ''}
               </button>
             </div>
           </div>
@@ -347,14 +350,17 @@ export class ConfiguratorUI {
               : ''
           }
 
+          ${
+            this.config.frontPlate.mode !== 'metal'
+              ? `
           <div class="control-group">
             <label class="control-label">Couleur de la façade${this.config.frontPlate.mode === 'wood' ? ' & plaque bois' : ''}</label>
             <div class="segmented-2">
               <button class="seg-btn ${this.config.frontFaceColor.mode === 'match_body' ? 'active' : ''}" data-face-mode="match_body">
-                Identique au corps
+                Identique au corps ${SHOW_PRICING ? '<span class="delta">Inclus</span>' : ''}
               </button>
               <button class="seg-btn ${this.config.frontFaceColor.mode === 'custom' ? 'active' : ''}" data-face-mode="custom">
-                Couleur dédiée ${SHOW_PRICING ? '<span class="delta">+55 €</span>' : ''}
+                Couleur différente ${SHOW_PRICING ? `<span class="delta">+${formatEuro(CUSTOM_FACE_COLOR_PRICE)}</span>` : ''}
               </button>
             </div>
             ${
@@ -377,6 +383,9 @@ export class ConfiguratorUI {
                 : ''
             }
           </div>
+          `
+              : ''
+          }
         `;
 
       case 3:
@@ -614,37 +623,46 @@ export class ConfiguratorUI {
     `;
   }
 
-  private renderQuoteModal(_total: number): string {
+  private renderQuoteModal(total: number): string {
     const mf = METAL_FINISHES.find((m) => m.id === this.config.frontPlate.metalFinish);
     const horn = HORN_MODELS.find((h) => h.id === this.config.hornModel.type);
     const mount = MOUNT_OPTIONS.find((m) => m.id === this.config.mount.type);
 
     const facadeLabel =
       this.config.frontPlate.mode === 'none'
-        ? 'Façade enfoncée (vis apparentes)'
+        ? `Façade bois enfoncée · ${this.config.frontFaceColor.colorName}`
         : this.config.frontPlate.mode === 'wood'
-          ? 'Façade bois affleurante 20 mm'
+          ? `Façade bois affleurante 20 mm · ${this.config.frontFaceColor.colorName}`
           : `Plaque métal (${mf?.name ?? this.config.frontPlate.metalFinish})`;
+
+    const facadeDelta =
+      this.config.frontPlate.mode === 'metal'
+        ? this.config.frontPlate.priceDelta
+        : this.config.frontFaceColor.mode === 'custom'
+          ? CUSTOM_FACE_COLOR_PRICE
+          : 0;
 
     const caissonLabel =
       this.config.bodyFinish.type === 'plywood'
         ? 'Contreplaqué Bouleau verni satiné'
         : `Peinture ${this.config.bodyFinish.surface === 'matte' ? 'Mate' : 'Satinée'} — ${this.config.bodyFinish.colorName}`;
 
-    const rows: Array<[string, string]> = [
-      ['Arêtes', this.config.edges === 'raw' ? 'Brutes' : 'Arrondies'],
-      ['Caisson', caissonLabel],
-      ['Façade', `${facadeLabel} · ${this.config.frontFaceColor.colorName}`],
-      ['Visserie HP', this.config.screwColor === 'silver' ? 'Argentée' : 'Noire'],
-      ['Pavillon', `${horn?.name ?? this.config.hornModel.type}`],
+    const fmtDelta = (d: number) => (d > 0 ? `+${formatEuro(d)}` : '+0 €');
+
+    const rows: Array<[string, string, string]> = [
+      ['1. Arêtes', this.config.edges === 'raw' ? 'Brutes' : 'Arrondies', fmtDelta(EDGE_PRICES[this.config.edges])],
+      ['2. Caisson', caissonLabel, '+0 €'],
+      ['3. Façade', `${facadeLabel} · Vis ${this.config.screwColor === 'silver' ? 'argentées' : 'noires'}`, fmtDelta(facadeDelta)],
       [
-        'Filament Pavillon',
-        `${this.config.hornModel.colorName}${this.config.hornModel.skuFilament ? ` (${this.config.hornModel.skuFilament})` : ''}`,
+        '4. Pavillon',
+        `${horn?.name ?? this.config.hornModel.type} · ${this.config.hornModel.colorName}${this.config.hornModel.skuFilament ? ` (${this.config.hornModel.skuFilament})` : ''}`,
+        '+0 €',
       ],
-      ['Piètement', mount?.name ?? this.config.mount.type],
+      ['5. Piètement', mount?.name ?? this.config.mount.type, fmtDelta(this.config.mount.priceDelta)],
       [
-        'Plaque bornier',
-        `${this.config.badge.plateColorName}${this.config.badge.text.trim() ? ` · Texte « ${this.config.badge.text.trim()} » (${this.config.badge.textColorName})` : ' · Standard'}`,
+        '6. Plaque',
+        `${this.config.badge.plateColorName}${this.config.badge.text.trim() ? ` · « ${this.config.badge.text.trim()} » (${this.config.badge.textColorName})` : ' · Standard'}`,
+        '+0 €',
       ],
     ];
 
@@ -654,7 +672,7 @@ export class ConfiguratorUI {
           <div class="modal-head">
             <div>
               <h2>Demande de devis — CUBO 2</h2>
-              <p class="quote-subtitle">Fabrication artisanale sur commande · Réponse sous 24–48 h</p>
+              <p class="quote-subtitle">Total estimé : <strong>${formatEuro(total)} TTC</strong> (à l'unité) · Base ${formatEuro(this.config.basePrice)} TTC</p>
             </div>
             <button class="btn-icon" id="btn-close-modal" title="Fermer">✕</button>
           </div>
@@ -674,14 +692,20 @@ export class ConfiguratorUI {
                 `
                     : ''
                 }
-                <div class="quote-section-title">Fiche technique de votre configuration</div>
+                <div class="quote-section-title">Détail des 6 étapes &amp; suppléments</div>
                 <dl class="quote-spec-list">
-                  ${rows.map(([k, v]) => `<div class="quote-spec-row"><dt>${k}</dt><dd>${v}</dd></div>`).join('')}
+                  ${rows
+                    .map(
+                      ([k, v, d]) =>
+                        `<div class="quote-spec-row quote-spec-row--3col"><dt>${k}</dt><dd>${v}</dd><span class="quote-spec-delta">${d}</span></div>`
+                    )
+                    .join('')}
+                  <div class="quote-spec-row quote-spec-row--total"><dt>Total estimé (unité)</dt><dd></dd><span class="quote-spec-delta">${formatEuro(total)} TTC</span></div>
                 </dl>
               </div>
 
               <div class="quote-fields-col">
-                <div class="quote-section-title">Vos coordonnées</div>
+                <div class="quote-section-title">Vos coordonnées &amp; livraison</div>
                 <div class="quote-fields-stack">
                   <div class="form-field">
                     <label for="quote-name">Nom &amp; Prénom *</label>
@@ -716,13 +740,33 @@ export class ConfiguratorUI {
                       value="${this.customerForm.phone.replace(/"/g, '&quot;')}"
                     />
                   </div>
+                  <div class="quote-2fields">
+                    <div class="form-field">
+                      <label for="quote-qty">Quantité souhaitée</label>
+                      <select id="quote-qty" class="text-input">
+                        <option value="1 pièce" ${this.customerForm.quantity === '1 pièce' ? 'selected' : ''}>1 pièce</option>
+                        <option value="1 paire (2 enceintes)" ${this.customerForm.quantity === '1 paire (2 enceintes)' ? 'selected' : ''}>1 paire (2 enceintes)</option>
+                        <option value="Autre" ${this.customerForm.quantity === 'Autre' ? 'selected' : ''}>Autre (préciser)</option>
+                      </select>
+                    </div>
+                    <div class="form-field">
+                      <label for="quote-location">Code postal / Pays</label>
+                      <input
+                        id="quote-location"
+                        class="text-input"
+                        type="text"
+                        placeholder="Ex : 45000, France"
+                        value="${this.customerForm.location.replace(/"/g, '&quot;')}"
+                      />
+                    </div>
+                  </div>
                   <div class="form-field">
-                    <label for="quote-message">Quantité, ville / code postal &amp; précisions</label>
+                    <label for="quote-message">Remarques éventuelles</label>
                     <textarea
                       id="quote-message"
                       class="text-input quote-textarea"
-                      rows="3"
-                      placeholder="Ex : 1 paire (2 enceintes), livraison 45000 Orléans, délai souhaité…"
+                      rows="2"
+                      placeholder="Délai souhaité, précision sur la plaque, question…"
                     >${this.customerForm.message.replace(/</g, '&lt;')}</textarea>
                   </div>
                 </div>
@@ -874,7 +918,7 @@ export class ConfiguratorUI {
           const def = PAINT_COLORS[10]; // Noir Intense
           this.config.bodyFinish.color = this.config.bodyFinish.color ?? def.hex;
           this.config.bodyFinish.colorName = this.config.bodyFinish.colorName === 'Contreplaqué' ? def.name : this.config.bodyFinish.colorName;
-          this.config.bodyFinish.priceDelta = 90;
+          this.config.bodyFinish.priceDelta = 0;
         }
         this.emitChange();
       });
@@ -913,6 +957,12 @@ export class ConfiguratorUI {
         } else {
           const mf = METAL_FINISHES.find((m) => m.id === this.config.frontPlate.metalFinish) ?? METAL_FINISHES[0];
           this.config.frontPlate.priceDelta = mf.priceDelta;
+          this.config.frontFaceColor = {
+            mode: 'match_body',
+            color: null,
+            colorName: 'Identique au caisson',
+            priceDelta: 0,
+          };
         }
         this.emitChange();
       });
@@ -947,7 +997,7 @@ export class ConfiguratorUI {
           const def = PAINT_COLORS[10];
           this.config.frontFaceColor.color = this.config.frontFaceColor.color ?? def.hex;
           this.config.frontFaceColor.colorName = this.config.frontFaceColor.colorName === 'Identique au caisson' ? def.name : this.config.frontFaceColor.colorName;
-          this.config.frontFaceColor.priceDelta = 55;
+          this.config.frontFaceColor.priceDelta = CUSTOM_FACE_COLOR_PRICE;
         }
         this.emitChange();
       });
@@ -1005,7 +1055,7 @@ export class ConfiguratorUI {
     const plaqueInput = this.root.querySelector<HTMLInputElement>('#plaque-text-input');
     plaqueInput?.addEventListener('input', () => {
       this.config.badge.text = plaqueInput.value;
-      this.config.badge.priceDelta = plaqueInput.value.trim().length > 0 ? 25 : 0;
+      this.config.badge.priceDelta = 0;
       this.handlers.onConfigChange(this.config);
       const priceEl = this.root.querySelector('.price-value');
       if (priceEl) priceEl.textContent = formatEuro(calculateTotalPrice(this.config));
@@ -1089,7 +1139,12 @@ export class ConfiguratorUI {
     bindInput('#quote-name', 'name');
     bindInput('#quote-email', 'email');
     bindInput('#quote-phone', 'phone');
+    bindInput('#quote-location', 'location');
     bindInput('#quote-message', 'message');
+    const qtyEl = this.root.querySelector<HTMLSelectElement>('#quote-qty');
+    qtyEl?.addEventListener('change', () => {
+      this.customerForm.quantity = qtyEl.value;
+    });
 
     // Submit quote request
     this.root.querySelector<HTMLFormElement>('#quote-contact-form')?.addEventListener('submit', async (e) => {
