@@ -123,6 +123,8 @@ export class Relica3Viewer {
   private camera: THREE.PerspectiveCamera;
   private controls: OrbitControls;
   private boardGroup = new THREE.Group();
+  private dimGroup = new THREE.Group();
+  private dimensionsVisible = false;
   private animFrameId = 0;
   private camAnim: {
     startPos: THREE.Vector3;
@@ -165,6 +167,7 @@ export class Relica3Viewer {
     window.addEventListener('sf3d-theme-change', (ev: Event) => {
       const dark = Boolean((ev as CustomEvent).detail?.isDark);
       this.scene.environmentIntensity = dark ? 1.05 : 0.72;
+      if (this.dimensionsVisible) this.rebuildDimensionsHelper();
     });
 
     const aspect = container.clientWidth / Math.max(1, container.clientHeight);
@@ -183,6 +186,8 @@ export class Relica3Viewer {
 
     this.setupLighting();
     this.scene.add(this.boardGroup);
+    this.dimGroup.visible = false;
+    this.scene.add(this.dimGroup);
     this.loadModel(onLoaded, onError);
 
     window.addEventListener('resize', this.handleResize);
@@ -231,6 +236,103 @@ export class Relica3Viewer {
         onError?.(err);
       }
     );
+  }
+
+  public setDimensionsVisible(visible: boolean): void {
+    this.dimensionsVisible = visible;
+    this.dimGroup.visible = visible;
+    if (visible) this.rebuildDimensionsHelper();
+  }
+
+  private rebuildDimensionsHelper(): void {
+    while (this.dimGroup.children.length > 0) {
+      const child = this.dimGroup.children[0];
+      this.dimGroup.remove(child);
+      if ((child as THREE.Line).geometry) (child as THREE.Line).geometry.dispose();
+      if ((child as THREE.Sprite).isSprite) {
+        const spMat = (child as THREE.Sprite).material as THREE.SpriteMaterial;
+        spMat.map?.dispose();
+        spMat.dispose();
+      }
+    }
+
+    this.boardGroup.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(this.boardGroup);
+    if (box.isEmpty()) return;
+
+    const { min, max } = box;
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const fmtMm = (m: number) => `${Math.round(m * 1000)} mm`;
+
+    const textHex = getSf3dTheme() === 'dark' ? '#f4f2ee' : '#151515';
+    const lineMat = new THREE.LineBasicMaterial({ color: textHex, transparent: true, opacity: 0.9 });
+
+    const addLabel = (label: string, pos: THREE.Vector3, w = 0.088) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 320;
+      canvas.height = 76;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.font = '700 32px "Source Sans 3", system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = textHex;
+        ctx.fillText(label, 160, 38);
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+      sprite.position.copy(pos);
+      sprite.scale.set(w, w * (76 / 320), 1);
+      sprite.renderOrder = 20;
+      this.dimGroup.add(sprite);
+    };
+
+    const off = 0.018;
+    const tick = 0.005;
+    const addLine = (a: THREE.Vector3, b: THREE.Vector3, tickDir: THREE.Vector3) => {
+      const pts = [
+        a, b,
+        a.clone().addScaledVector(tickDir, -tick), a.clone().addScaledVector(tickDir, tick),
+        b.clone().addScaledVector(tickDir, -tick), b.clone().addScaledVector(tickDir, tick),
+      ];
+      this.dimGroup.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), lineMat));
+    };
+
+    // Longueur totale (X)
+    addLine(
+      new THREE.Vector3(min.x, min.y + 0.001, max.z + off),
+      new THREE.Vector3(max.x, min.y + 0.001, max.z + off),
+      new THREE.Vector3(0, 0, 1)
+    );
+    addLabel(`L ${fmtMm(size.x)}`, new THREE.Vector3((min.x + max.x) * 0.5, min.y + 0.004, max.z + off + 0.015));
+
+    // Largeur totale (Z)
+    addLine(
+      new THREE.Vector3(max.x + off, min.y + 0.001, min.z),
+      new THREE.Vector3(max.x + off, min.y + 0.001, max.z),
+      new THREE.Vector3(1, 0, 0)
+    );
+    addLabel(`l ${fmtMm(size.z)}`, new THREE.Vector3(max.x + off + 0.036, min.y + 0.004, (min.z + max.z) * 0.5));
+
+    // Hauteur hors-tout composants (Y)
+    addLine(
+      new THREE.Vector3(max.x + off, min.y, max.z + off * 0.5),
+      new THREE.Vector3(max.x + off, max.y, max.z + off * 0.5),
+      new THREE.Vector3(1, 0, 0)
+    );
+    addLabel(`H ${fmtMm(size.y)}`, new THREE.Vector3(max.x + off + 0.034, max.y + 0.009, max.z + off * 0.5));
+
+    // Entraxe des perçages de fixation M4 (280 x 178 mm)
+    const hx = 0.14;
+    const hz = 0.089;
+    addLine(
+      new THREE.Vector3(-hx, min.y + 0.002, -hz),
+      new THREE.Vector3(hx, min.y + 0.002, -hz),
+      new THREE.Vector3(0, 0, 1)
+    );
+    addLabel('Entraxe M4 : 280 × 178 mm', new THREE.Vector3(0, min.y + 0.006, -hz - 0.018), 0.135);
   }
 
   public setCameraPreset(preset: CameraPreset): void {
