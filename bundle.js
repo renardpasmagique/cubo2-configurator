@@ -4261,7 +4261,6 @@ void main() {
           <section class="step-card ${this.activeStep===e.id?`is-open`:``}">
             <button class="step-header" data-step="${e.id}">
               <span class="step-title">${e.title}</span>
-              <span class="step-val">${e.badge}</span>
               <span class="step-chevron">${this.activeStep===e.id?`−`:`+`}</span>
             </button>
             ${this.activeStep===e.id?`<div class="step-body">${this.renderStepContent(e.id)}</div>`:``}
@@ -4753,7 +4752,6 @@ void main() {
               <section class="step-card ${t?`is-open`:``}">
                 <button class="step-header" data-step="${e.id}">
                   <span class="step-title">${e.title}</span>
-                  <span class="step-val">${e.badge}</span>
                   <span class="step-chevron">${t?`−`:`+`}</span>
                 </button>
                 ${t?`<div class="step-body">${this.renderStepBody(e.id)}</div>`:``}
@@ -4907,7 +4905,6 @@ void main() {
               <section class="step-card ${t?`is-open`:``}">
                 <button class="step-header" data-step="${e.id}">
                   <span class="step-title">${e.title}</span>
-                  <span class="step-val">${e.badge}</span>
                   <span class="step-chevron">${t?`−`:`+`}</span>
                 </button>
                 ${t?`<div class="step-body">${this.renderStepBody(e.id)}</div>`:``}
