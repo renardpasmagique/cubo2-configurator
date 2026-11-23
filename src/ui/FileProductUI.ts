@@ -262,7 +262,6 @@ export class FileProductUI {
               <section class="step-card ${open ? 'is-open' : ''}">
                 <button class="step-header" data-step="${s.id}">
                   <span class="step-title">${s.title}</span>
-                  <span class="step-val">${s.badge}</span>
                   <span class="step-chevron">${open ? '−' : '+'}</span>
                 </button>
                 ${open ? `<div class="step-body">${this.renderStepBody(s.id)}</div>` : ''}

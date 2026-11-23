@@ -148,7 +148,6 @@ export class ConfiguratorUI {
           <section class="step-card ${this.activeStep === s.id ? 'is-open' : ''}">
             <button class="step-header" data-step="${s.id}">
               <span class="step-title">${s.title}</span>
-              <span class="step-val">${s.badge}</span>
               <span class="step-chevron">${this.activeStep === s.id ? '−' : '+'}</span>
             </button>
             ${this.activeStep === s.id ? `<div class="step-body">${this.renderStepContent(s.id)}</div>` : ''}
