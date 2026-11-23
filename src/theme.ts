@@ -128,9 +128,11 @@ export function initThemeAndPortfolioLinks(): void {
     if (items.length === 0) {
       items.push(
         { label: 'Produit', href: 'https://www.5426.fr/' },
-        { label: 'Portfolio', href: 'https://liampiecourt.fr', external: true },
-        { label: 'Instagram', href: 'https://www.instagram.com/5426_studio/', external: true }
+        { label: 'Portfolio', href: 'https://liampiecourt.fr', external: true }
       );
+    }
+    if (!items.some((it) => it.href.includes('instagram.com'))) {
+      items.push({ label: 'Instagram @5426_studio', href: 'https://www.instagram.com/5426_studio/', external: true });
     }
     const list = document.createElement('ul');
     list.className = 'sf3d-mobile-nav-list';
@@ -147,5 +149,35 @@ export function initThemeAndPortfolioLinks(): void {
       list.appendChild(li);
     }
     mobileDrawerNav.appendChild(list);
+  }
+
+  // Hide "Déjà vus" / "Recently viewed" sections across the shop
+  document.querySelectorAll<HTMLElement>('section, .featured-products, .ps-viewedproducts').forEach((sec) => {
+    const h = sec.querySelector('h2, h3, .h2, .products-section-title');
+    if (h && /d[ée]j[àa]\s*vus|recently\s*viewed/i.test(h.textContent || '')) {
+      sec.style.display = 'none';
+    }
+  });
+
+  // Add clean institutional & legal links bar right below "Produits de la même catégorie" (or in #footer)
+  const sameCatSec =
+    document.querySelector('.product-accessories, .category-products, .ps-categoryproducts') ||
+    document.querySelector('#footer .container');
+  if (sameCatSec && !document.getElementById('sf3d-legal-links-bar')) {
+    const bar = document.createElement('nav');
+    bar.id = 'sf3d-legal-links-bar';
+    bar.className = 'sf3d-legal-links-bar';
+    bar.setAttribute('aria-label', 'Liens légaux et contact');
+    const legalLinks = [
+      { label: 'Licences', href: 'https://www.5426.fr/content/9-licence' },
+      { label: 'Mentions légales', href: 'https://www.5426.fr/content/2-mentions-legales' },
+      { label: 'CGV', href: 'https://www.5426.fr/content/3-conditions-utilisation' },
+      { label: 'Politique de confidentialité', href: 'https://www.5426.fr/content/6-security-policy' },
+      { label: 'Contact', href: 'https://www.5426.fr/nous-contacter' },
+    ];
+    bar.innerHTML = legalLinks
+      .map((l) => `<a href="${l.href}">${l.label}</a>`)
+      .join('');
+    sameCatSec.insertAdjacentElement('afterend', bar);
   }
 }

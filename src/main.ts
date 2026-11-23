@@ -1,5 +1,5 @@
 import './style.css';
-import { createDefaultConfig, Cubo2Config, HornType } from './config/pricing';
+import { createDefaultConfig, createRandomConfig, Cubo2Config, HornType } from './config/pricing';
 import { CatalogCard3D } from './scene/CatalogCard3D';
 import { CathedraleHero } from './scene/CathedraleHero';
 import { CameraPreset, Cubo2Viewer } from './scene/Cubo2Viewer';
@@ -157,12 +157,7 @@ const APP_MARKUP = `
         <div class="spinner"></div>
         <span>Chargement du modèle 3D…</span>
       </div>
-      <div class="cam-bar" id="cam-bar" role="toolbar" aria-label="Vues caméra">
-        <button class="cam-pill active" data-cam="three_quarter">3/4 Studio</button>
-        <button class="cam-pill" data-cam="front">Face</button>
-        <button class="cam-pill" data-cam="profile">Profil</button>
-        <button class="cam-pill" data-cam="top">Dessus</button>
-      </div>
+      <div class="cam-bar" id="cam-bar" role="toolbar" aria-label="Outils 3D"></div>
       <div class="orbit-hint" id="orbit-hint">Glisser pour pivoter • Molette pour zoomer</div>
     </main>
     <aside id="panel" class="config-panel"></aside>
@@ -520,7 +515,16 @@ if (psHomeRoot && !psProductRoot) {
     let showDim = false;
     const camBarEl = document.getElementById('cam-bar');
     let dimBtn: HTMLButtonElement | null = null;
+    let randBtn: HTMLButtonElement | null = null;
     if (camBarEl) {
+      randBtn = document.createElement('button');
+      randBtn.type = 'button';
+      randBtn.id = 'btn-random-config';
+      randBtn.className = 'cam-pill';
+      randBtn.title = 'Générer une configuration aléatoire';
+      randBtn.textContent = 'Aléatoire';
+      camBarEl.appendChild(randBtn);
+
       dimBtn = document.createElement('button');
       dimBtn.type = 'button';
       dimBtn.id = 'btn-toggle-dim';
@@ -564,6 +568,12 @@ if (psHomeRoot && !psProductRoot) {
       scrapedPhotos
     );
     injectProductSeoJsonLd(8, viewportEl);
+
+    randBtn?.addEventListener('click', () => {
+      currentConfig = createRandomConfig();
+      ui.setConfig(currentConfig);
+      viewer.applyConfig(currentConfig);
+    });
 
     document.querySelectorAll<HTMLButtonElement>('[data-cam]').forEach((btn) => {
       btn.addEventListener('click', () => {
