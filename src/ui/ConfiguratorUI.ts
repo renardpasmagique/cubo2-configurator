@@ -31,7 +31,7 @@ export class ConfiguratorUI {
   private root: HTMLElement;
   private config: Cubo2Config;
   private handlers: UIHandlers;
-  private activeStep = 1;
+  private activeStep = typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches ? 0 : 1;
   private showQuoteModal = false;
   private showDescriptionModal = false;
   private showGalleryModal = false;
@@ -145,6 +145,7 @@ export class ConfiguratorUI {
           <section class="step-card ${this.activeStep === s.id ? 'is-open' : ''}">
             <button class="step-header" data-step="${s.id}">
               <span class="step-title">${s.title}</span>
+              <span class="step-val">${s.badge}</span>
               <span class="step-chevron">${this.activeStep === s.id ? '−' : '+'}</span>
             </button>
             ${this.activeStep === s.id ? `<div class="step-body">${this.renderStepContent(s.id)}</div>` : ''}

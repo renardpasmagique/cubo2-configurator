@@ -154,7 +154,7 @@ export class FileProductUI {
   private policies: PolicyLink[];
   private handlers: FileProductUIHandlers;
   private format: HornPurchaseFormat = 'digital';
-  private activeStep = 1;
+  private activeStep = typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches ? 0 : 1;
   private viewMode: '3d' | 'photos' = '3d';
   private activePhotoIdx = 0;
   private activeColor = PETG_COLORS[0];
@@ -258,6 +258,7 @@ export class FileProductUI {
               <section class="step-card ${open ? 'is-open' : ''}">
                 <button class="step-header" data-step="${s.id}">
                   <span class="step-title">${s.title}</span>
+                  <span class="step-val">${s.badge}</span>
                   <span class="step-chevron">${open ? '−' : '+'}</span>
                 </button>
                 ${open ? `<div class="step-body">${this.renderStepBody(s.id)}</div>` : ''}
@@ -268,6 +269,22 @@ export class FileProductUI {
       </div>
 
       <div class="panel-footer">
+        ${
+          hasPrintedOption
+            ? `
+          <div class="segmented-2 format-segmented" role="group" aria-label="Format d'achat">
+            <button type="button" class="seg-btn ${this.format === 'printed' ? 'active' : ''}" data-purchase-format="printed">
+              <span>Pièce Imprimée 3D</span>
+              <span class="delta">${this.spec.printedPriceText}</span>
+            </button>
+            <button type="button" class="seg-btn ${this.format === 'digital' ? 'active' : ''}" data-purchase-format="digital">
+              <span>Fichier Numérique (STL)</span>
+              <span class="delta">${this.spec.digitalPriceText}</span>
+            </button>
+          </div>
+        `
+            : ''
+        }
         <div class="price-row-main">
           <div>
             <div class="price-label">${
@@ -329,26 +346,6 @@ export class FileProductUI {
     switch (stepId) {
       case 1:
         return `
-          ${
-            hasPrintedOption
-              ? `
-            <div class="control-group">
-              <label class="control-label">Version du produit</label>
-              <div class="segmented-2">
-                <button type="button" class="seg-btn ${this.format === 'digital' ? 'active' : ''}" data-purchase-format="digital">
-                  <span>Fichiers 3D (.STL / .STEP)</span>
-                  <span class="delta">${this.spec.digitalPriceText}</span>
-                </button>
-                <button type="button" class="seg-btn ${this.format === 'printed' ? 'active' : ''}" data-purchase-format="printed">
-                  <span>Pavillon Imprimé 3D</span>
-                  <span class="delta">${this.spec.printedPriceText}</span>
-                </button>
-              </div>
-            </div>
-          `
-              : ''
-          }
-
           <div class="control-group">
             <label class="control-label">Affichage</label>
             <div class="segmented-2">
@@ -389,6 +386,9 @@ export class FileProductUI {
               : ''
           }
 
+          ${
+            !hasPrintedOption || this.format === 'printed'
+              ? `
           <div class="control-group">
             <label class="control-label">Filament — <strong>${this.activeColor.nom_commercial || this.activeColor.name}</strong></label>
             <div class="sub-label">Classique</div>
@@ -424,6 +424,9 @@ export class FileProductUI {
                 .join('')}
             </div>
           </div>
+          `
+              : ''
+          }
         `;
 
       case 2:

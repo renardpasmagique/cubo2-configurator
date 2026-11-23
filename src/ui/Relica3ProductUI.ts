@@ -20,7 +20,7 @@ export class Relica3ProductUI {
   private photos: string[];
   private policies: PolicyLink[];
   private handlers: Relica3UIHandlers;
-  private activeStep = 1;
+  private activeStep = typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches ? 0 : 1;
   private viewMode: '3d' | 'photos' = '3d';
   private activePhotoIdx = 0;
   private qty = 1;
@@ -90,6 +90,7 @@ export class Relica3ProductUI {
               <section class="step-card ${open ? 'is-open' : ''}">
                 <button class="step-header" data-step="${s.id}">
                   <span class="step-title">${s.title}</span>
+                  <span class="step-val">${s.badge}</span>
                   <span class="step-chevron">${open ? '−' : '+'}</span>
                 </button>
                 ${open ? `<div class="step-body">${this.renderStepBody(s.id)}</div>` : ''}
