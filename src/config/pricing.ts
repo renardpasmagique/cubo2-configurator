@@ -103,13 +103,13 @@ export interface MountOption {
 
 export const SHOW_PRICING = true;
 
-export const BASE_PRICE = 1500;
+export const BASE_PRICE = 1650;
 
 export const CUBO2_PRICING_MATRIX = {
   product: 'CUBO 2',
-  basePrice: 1500,
+  basePrice: 1650,
   currency: 'EUR',
-  unit: 'à l\'unité (TTC)',
+  unit: 'la paire (TTC)',
   pricingMatrix: {
     cabinetEdge: {
       raw: { label: 'Arête brute', delta: 0 },
@@ -264,7 +264,7 @@ export const PETG_COLORS: ColorOption[] = filamentsCatalog.filaments.map((f) => 
   sku_filament: f.sku_filament,
   nom_commercial: f.nom_commercial,
   gamme: f.gamme,
-  name: f.nom_commercial,
+  name: f.short_name,
   hex: f.code_hex,
   translucent: f.translucent,
 }));
@@ -333,7 +333,7 @@ export function createDefaultConfig(): Cubo2Config {
       type: '2x5',
       skuFilament: 'ANY-PETG-TRL-CLR',
       color: '#eef2f5',
-      colorName: 'Anycubic PETG Translucent - Transparent',
+      colorName: 'Transparent',
       gamme: 'Anycubic PETG Translucent',
       translucent: true,
       priceDelta: 0,
@@ -347,7 +347,7 @@ export function createDefaultConfig(): Cubo2Config {
       text: '',
       plateSkuFilament: 'ANY-PETG-TRL-CLR',
       plateColor: '#eef2f5',
-      plateColorName: 'Anycubic PETG Translucent - Transparent',
+      plateColorName: 'Transparent',
       plateTranslucent: true,
       textColor: '#151515',
       textColorName: 'Noir',
@@ -379,7 +379,7 @@ export function createRandomConfig(): Cubo2Config {
       type: isPlywood ? 'plywood' : 'solid',
       surface,
       color: isPlywood ? null : paint.hex,
-      colorName: isPlywood ? 'Contreplaqué Bouleau' : paint.name,
+      colorName: isPlywood ? 'Contreplaqué' : paint.name,
       priceDelta: 0,
     },
     frontFaceColor: {
@@ -398,7 +398,7 @@ export function createRandomConfig(): Cubo2Config {
       type: hornOpt.id,
       skuFilament: hornPetg.sku_filament || '',
       color: hornPetg.hex,
-      colorName: hornPetg.nom_commercial || hornPetg.name,
+      colorName: hornPetg.name,
       gamme: hornPetg.gamme || '',
       translucent: Boolean(hornPetg.translucent),
       priceDelta: hornOpt.priceDelta,
@@ -412,7 +412,7 @@ export function createRandomConfig(): Cubo2Config {
       text: '',
       plateSkuFilament: badgePetg.sku_filament || '',
       plateColor: badgePetg.hex,
-      plateColorName: badgePetg.nom_commercial || badgePetg.name,
+      plateColorName: badgePetg.name,
       plateTranslucent: Boolean(badgePetg.translucent),
       textColor: badgeText.hex,
       textColorName: badgeText.name,
