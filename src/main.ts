@@ -269,7 +269,10 @@ if (psHomeRoot && !psProductRoot) {
     );
 
     camBarEl.innerHTML = `
-      <button type="button" class="cam-btn" id="btn-toggle-dim" aria-pressed="false" title="Afficher / masquer les cotes">
+      <button type="button" class="cam-pill" id="btn-randomize-cubo4" title="Générer une configuration aléatoire">
+        Aléatoire
+      </button>
+      <button type="button" class="cam-pill" id="btn-toggle-dim" aria-pressed="false" title="Afficher / masquer les cotes">
         Cotation
       </button>
     `;
@@ -279,6 +282,11 @@ if (psHomeRoot && !psProductRoot) {
       cubo4Viewer.setDimensionsVisible(dimensionsVisible);
       dimBtn.classList.toggle('active', dimensionsVisible);
       dimBtn.setAttribute('aria-pressed', dimensionsVisible ? 'true' : 'false');
+    });
+    document.getElementById('btn-randomize-cubo4')?.addEventListener('click', () => {
+      currentConfig = createRandomCubo4Config(currentConfig.badge.text);
+      cubo4Viewer.applyConfig(currentConfig);
+      cubo4UI.setConfig(currentConfig);
     });
 
     const cubo4UI = new Cubo4UI(
