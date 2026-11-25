@@ -5,10 +5,10 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { HornType, METAL_FINISHES, PAINT_COLORS, PETG_COLORS } from '../config/pricing';
 import { applyPetgMaterial } from './petgMaterial';
 import { applyRelica3Materials } from './Relica3Viewer';
-import { createPlywoodTextures } from './textures';
+import { createPlywoodTextures, createWoodVeneerTextures } from './textures';
 import { getSf3dTheme } from '../theme';
 
-type CardKind = 'cubo2' | 'horn_3x4' | 'horn_2x5' | 'horn_oval' | 'relica3';
+type CardKind = 'cubo2' | 'cubo4' | 'horn_3x4' | 'horn_2x5' | 'horn_oval' | 'relica3';
 
 interface CardSlot {
   card: HTMLElement;
@@ -60,6 +60,7 @@ export class CatalogCard3D {
 
     const cardConfigs: Array<{ id: number; kind: CardKind; title?: string; priceLabel?: string }> = [
       { id: 8, kind: 'cubo2', title: 'CUBO 2 Configurateur' },
+      { id: 11, kind: 'cubo4', title: 'CUBO 4 Configurateur', priceLabel: 'Sur devis' },
       {
         id: 1,
         kind: 'horn_3x4',
@@ -170,8 +171,53 @@ export class CatalogCard3D {
     const loader = new GLTFLoader();
     loader.setDRACOLoader(dracoLoader);
 
-    const needCuboOrHorns = cards.some((c) => c.kind !== 'relica3');
+    const needCuboOrHorns = cards.some((c) => c.kind !== 'relica3' && c.kind !== 'cubo4');
+    const needCubo4 = cards.some((c) => c.kind === 'cubo4');
     const needRelica3 = cards.some((c) => c.kind === 'relica3');
+
+    if (needCubo4) {
+      loader.load(`${assetsBase}cubo4.glb`, (gltf) => {
+        for (const item of cards) {
+          if (item.kind !== 'cubo4') continue;
+          const root = gltf.scene.clone(true);
+          const veneerTex = createWoodVeneerTextures();
+          const hornFil = pickRandom(PETG_COLORS);
+          const frontFil = pickRandom(PETG_COLORS);
+          const veneerMat = new THREE.MeshPhysicalMaterial({
+            map: veneerTex.map,
+            bumpMap: veneerTex.bumpMap,
+            bumpScale: 0.0014,
+            roughness: 0.56,
+            clearcoat: 0.2,
+          });
+          const hornMat = new THREE.MeshPhysicalMaterial({ color: '#ffffff', side: THREE.DoubleSide });
+          applyPetgMaterial(hornMat, hornFil.hex, Boolean(hornFil.translucent));
+          const frontPetgMat = new THREE.MeshPhysicalMaterial({ color: '#ffffff' });
+          applyPetgMaterial(frontPetgMat, frontFil.hex, Boolean(frontFil.translucent));
+          const darkMat = new THREE.MeshStandardMaterial({ color: 0x1d1e22, roughness: 0.65 });
+          const steelMat = new THREE.MeshStandardMaterial({ color: 0xb4b8be, roughness: 0.3, metalness: 0.85 });
+
+          root.traverse((o) => {
+            if (!(o as THREE.Mesh).isMesh) return;
+            const m = o as THREE.Mesh;
+            if (['cabinet_metal_body', 'cabinet_metal_baffle', 'front_metal_plate', 'even_metal', 'castors_bracket', 'castors_wheel'].includes(m.name)) {
+              m.visible = false;
+            } else if (m.name === 'cabinet_std_body' || m.name === 'cabinet_std_baffle') {
+              m.material = veneerMat;
+            } else if (m.name === 'horn_oval') {
+              m.material = hornMat;
+            } else if (m.name === 'facade_avant_hp' || m.name === 'even_std') {
+              m.material = frontPetgMat;
+            } else if (m.name === 'driver_oval_metal') {
+              m.material = steelMat;
+            } else {
+              m.material = darkMat;
+            }
+          });
+          this.attachCardSlot(item.card, item.imgEl, 'cubo4', root, size, 0.36, -0.45);
+        }
+      });
+    }
 
     if (needCuboOrHorns) {
       loader.load(`${assetsBase}cubo2.glb`, (gltf) => {
