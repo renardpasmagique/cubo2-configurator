@@ -115,19 +115,19 @@ export function createWoodVeneerTextures(): PlywoodTextureSet {
       const contour = Math.sin((Math.min(d1, d2 * 0.92) + warp) * 76.0);
       const idx = (y * size + x) * 4;
 
-      let r = 212 + Math.round(contour * 10);
-      let g = 178 + Math.round(contour * 9);
-      let b = 124 + Math.round(contour * 7);
-      let bv = 128 + Math.round(contour * 10);
+      let r = 211 + Math.round(contour * 8);
+      let g = 180 + Math.round(contour * 7);
+      let b = 132 + Math.round(contour * 6);
+      let bv = 128 + Math.round(contour * 8);
 
-      // Crisp thin dark charcoal-brown wood grain rings
-      if (contour > 0.62) {
-        const t = Math.min(1, (contour - 0.62) / 0.32);
-        const darkMix = 0.52 + t * 0.42;
-        r = Math.round(r * (1 - darkMix) + 32 * darkMix);
-        g = Math.round(g * (1 - darkMix) + 27 * darkMix);
-        b = Math.round(b * (1 - darkMix) + 21 * darkMix);
-        bv = Math.round(128 - t * 58);
+      // Subtle, natural medium-dark oak/ash latewood grain rings
+      if (contour > 0.68) {
+        const t = Math.min(1, (contour - 0.68) / 0.28);
+        const darkMix = 0.28 + t * 0.34;
+        r = Math.round(r * (1 - darkMix) + 68 * darkMix);
+        g = Math.round(g * (1 - darkMix) + 55 * darkMix);
+        b = Math.round(b * (1 - darkMix) + 41 * darkMix);
+        bv = Math.round(128 - t * 34);
       }
 
       d[idx] = Math.min(255, Math.max(0, r));

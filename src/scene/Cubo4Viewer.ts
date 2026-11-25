@@ -6,7 +6,6 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import {
   Cubo4Config,
   METAL_FINISHES,
-  MOUNT_OPTIONS,
   PAINT_COLORS,
   PETG_COLORS,
   PLAQUE_TEXT_COLORS,
@@ -60,6 +59,8 @@ export class Cubo4Viewer {
   private feetMat: THREE.MeshStandardMaterial;
   private castorBracketMat: THREE.MeshStandardMaterial;
   private castorWheelMat: THREE.MeshStandardMaterial;
+  private holdLeftMat: THREE.MeshStandardMaterial;
+  private holdRightMat: THREE.MeshStandardMaterial;
 
   constructor(container: HTMLElement, onLoaded?: () => void, onError?: (err: unknown) => void) {
     this.container = container;
@@ -149,9 +150,11 @@ export class Cubo4Viewer {
     this.driverMat = new THREE.MeshStandardMaterial({ color: 0x1e2024, roughness: 0.55, metalness: 0.25 });
     this.driverSteelMat = new THREE.MeshStandardMaterial({ color: 0xb4b8be, roughness: 0.28, metalness: 0.88 });
     this.goldMat = new THREE.MeshStandardMaterial({ color: 0xd9a84e, roughness: 0.22, metalness: 0.92 });
-    this.feetMat = new THREE.MeshStandardMaterial({ color: 0x1b1c1f, roughness: 0.65, metalness: 0.05 });
+    this.feetMat = new THREE.MeshStandardMaterial({ color: 0x151618, roughness: 0.72, metalness: 0.02 });
     this.castorBracketMat = new THREE.MeshStandardMaterial({ color: 0xa2a6ad, roughness: 0.32, metalness: 0.85 });
     this.castorWheelMat = new THREE.MeshStandardMaterial({ color: 0x222327, roughness: 0.7, metalness: 0.05 });
+    this.holdLeftMat = new THREE.MeshStandardMaterial({ color: 0xd9487a, roughness: 0.86, metalness: 0.02 });
+    this.holdRightMat = new THREE.MeshStandardMaterial({ color: 0x2271b3, roughness: 0.86, metalness: 0.02 });
 
     this.speakerGroup.add(this.upperAssembly);
     this.speakerGroup.add(this.mountGroup);
@@ -229,6 +232,10 @@ export class Cubo4Viewer {
             mesh.material = this.castorBracketMat;
           } else if (name === 'castors_wheel') {
             mesh.material = this.castorWheelMat;
+          } else if (name === 'hold_left') {
+            mesh.material = this.holdLeftMat;
+          } else if (name === 'hold_right') {
+            mesh.material = this.holdRightMat;
           }
         });
 
@@ -253,6 +260,8 @@ export class Cubo4Viewer {
           'binding_posts',
           'binding_posts_red',
           'binding_posts_black',
+          'hold_left',
+          'hold_right',
         ];
         for (const n of upperNodes) {
           const m = this.meshes.get(n);
@@ -384,12 +393,22 @@ export class Cubo4Viewer {
     const frontPetg = PETG_COLORS.find((c) => c.id === config.frontPetgId) || PETG_COLORS[0];
     applyPetgMaterial(this.frontPetgMat, frontPetg.hex, Boolean(frontPetg.translucent));
 
-    // Mount & elevation
+    // Mount & elevation (Pied tpu.stl = 22.43mm, castors = 78mm)
     this.setMeshVisible('mount_feet', config.mount === 'feet');
     this.setMeshVisible('castors_bracket', config.mount === 'castors');
     this.setMeshVisible('castors_wheel', config.mount === 'castors');
-    const mountOpt = MOUNT_OPTIONS.find((m) => m.id === config.mount) || MOUNT_OPTIONS[0];
-    this.upperAssembly.position.y = mountOpt.heightOffsetM;
+    this.upperAssembly.position.y =
+      config.mount === 'feet' ? 0.0224 : config.mount === 'castors' ? 0.078 : 0.0;
+
+    // Optional climbing hold side handles (2 colors: left & right)
+    this.setMeshVisible('hold_left', config.climbingHolds.enabled);
+    this.setMeshVisible('hold_right', config.climbingHolds.enabled);
+    if (config.climbingHolds.enabled) {
+      const lc = PETG_COLORS.find((c) => c.id === config.climbingHolds.leftColorId) || PETG_COLORS[0];
+      const rc = PETG_COLORS.find((c) => c.id === config.climbingHolds.rightColorId) || PETG_COLORS[0];
+      this.holdLeftMat.color.set(lc.hex);
+      this.holdRightMat.color.set(rc.hex);
+    }
 
     // Terminal & ID plaque
     const platePetg = PETG_COLORS.find((c) => c.id === config.badge.plateColorId) || PETG_COLORS[0];

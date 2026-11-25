@@ -59,7 +59,7 @@ export class CatalogCard3D {
       });
 
     const cardConfigs: Array<{ id: number; kind: CardKind; title?: string; priceLabel?: string }> = [
-      { id: 8, kind: 'cubo2', title: 'CUBO 2 Configurateur' },
+      { id: 8, kind: 'cubo2', title: 'CUBO 2 Configurateur', priceLabel: 'À partir de 1 650,00 €' },
       { id: 11, kind: 'cubo4', title: 'CUBO 4 Configurateur', priceLabel: 'Sur devis' },
       {
         id: 1,
@@ -204,7 +204,7 @@ export class CatalogCard3D {
             if ((o as THREE.Mesh).isMesh) allMeshes.push(o as THREE.Mesh);
           });
           for (const m of allMeshes) {
-            if (['cabinet_metal_body', 'cabinet_metal_baffle', 'front_metal_plate', 'even_metal', 'castors_bracket', 'castors_wheel'].includes(m.name)) {
+            if (['cabinet_metal_body', 'cabinet_metal_baffle', 'front_metal_plate', 'even_metal', 'castors_bracket', 'castors_wheel', 'hold_left', 'hold_right'].includes(m.name)) {
               m.visible = false;
               continue;
             }
@@ -225,7 +225,7 @@ export class CatalogCard3D {
               upper.add(m);
             }
           }
-          upper.position.y = 0.042;
+          upper.position.y = 0.0224;
           const assembly = new THREE.Group();
           assembly.add(upper);
           assembly.add(lower);
