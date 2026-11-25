@@ -1,6 +1,15 @@
 import {
+  calculateCubo4Price,
+  CUBO4_BASE_PRICE,
+  CUBO4_FACE_COLOR_PRICE,
+  CUBO4_HOLDS_PRICE,
+  CUBO4_METAL_PRICES,
+  CUBO4_MOUNT_PRICES,
+  CUBO4_WOOD_VENEER_PRICE,
   Cubo4BodyType,
   Cubo4Config,
+  formatEuro,
+  getCubo4PriceBreakdown,
   METAL_FINISHES,
   MOUNT_OPTIONS,
   PAINT_COLORS,
@@ -160,10 +169,13 @@ export class Cubo4UI {
   }
 
   private buildPlainSummary(): string {
+    const total = calculateCubo4Price(this.config);
     return [
       'CONFIGURATION CUBO 4 — 5426 STUDIO',
       '-----------------------------------',
       ...this.buildSummaryLines().map(([k, v]) => `${k} : ${v}`),
+      '-----------------------------------',
+      `TOTAL ESTIME : ${formatEuro(total)} TTC (à partir de ${formatEuro(CUBO4_BASE_PRICE)} TTC)`,
     ].join('\n');
   }
 
@@ -180,18 +192,21 @@ export class Cubo4UI {
                   <span class="opt-name">Placage bois</span>
                   <span class="opt-sub">Veinage naturel marqué</span>
                 </div>
+                <span class="opt-price">+${formatEuro(CUBO4_WOOD_VENEER_PRICE)}</span>
               </button>
               <button type="button" class="option-row ${this.config.bodyFinish.type === 'plywood' ? 'active' : ''}" data-body-type="plywood">
                 <div class="opt-col">
                   <span class="opt-name">Contreplaqué</span>
                   <span class="opt-sub">Bois brut verni</span>
                 </div>
+                <span class="opt-price">Inclus</span>
               </button>
               <button type="button" class="option-row ${this.config.bodyFinish.type === 'paint' ? 'active' : ''}" data-body-type="paint">
                 <div class="opt-col">
                   <span class="opt-name">Peinture</span>
                   <span class="opt-sub">Teintes du catalogue</span>
                 </div>
+                <span class="opt-price">Inclus</span>
               </button>
             </div>
           </div>
@@ -241,12 +256,14 @@ export class Cubo4UI {
                   <span class="opt-name">Façade bois + HP</span>
                   <span class="opt-sub">Contour HP &amp; évent standard</span>
                 </div>
+                <span class="opt-price">Inclus</span>
               </button>
               <button type="button" class="option-row ${isMetal ? 'active' : ''}" data-front-mode="metal_plate">
                 <div class="opt-col">
                   <span class="opt-name">Plaque métal affleurante</span>
                   <span class="opt-sub">Évent spécial plaque métal</span>
                 </div>
+                <span class="opt-price">+100 / +150 €</span>
               </button>
             </div>
           </div>
@@ -263,6 +280,7 @@ export class Cubo4UI {
                     <div class="opt-col">
                       <span class="opt-name">${this.esc(mf.name)}</span>
                     </div>
+                    <span class="opt-price">+${formatEuro(CUBO4_METAL_PRICES[mf.id])}</span>
                   </button>
                 `
                 ).join('')}
@@ -273,8 +291,8 @@ export class Cubo4UI {
             <div class="control-group">
               <label class="control-label">Couleur de la façade bois</label>
               <div class="segmented-2">
-                <button type="button" class="seg-btn ${this.config.frontFaceColor.sameAsBody ? 'active' : ''}" data-face-same="true">Assortie au corps</button>
-                <button type="button" class="seg-btn ${!this.config.frontFaceColor.sameAsBody ? 'active' : ''}" data-face-same="false">Façade colorée</button>
+                <button type="button" class="seg-btn ${this.config.frontFaceColor.sameAsBody ? 'active' : ''}" data-face-same="true">Assortie <span class="delta">Inclus</span></button>
+                <button type="button" class="seg-btn ${!this.config.frontFaceColor.sameAsBody ? 'active' : ''}" data-face-same="false">Façade colorée <span class="delta">+${formatEuro(CUBO4_FACE_COLOR_PRICE)}</span></button>
               </div>
             </div>
             ${
@@ -355,24 +373,26 @@ export class Cubo4UI {
           <div class="control-group">
             <label class="control-label">Piètement &amp; mobilité</label>
             <div class="option-list">
-              ${MOUNT_OPTIONS.map(
-                (m) => `
+              ${MOUNT_OPTIONS.map((m) => {
+                const p = CUBO4_MOUNT_PRICES[m.id];
+                return `
                 <button type="button" class="option-row ${this.config.mount === m.id ? 'active' : ''}" data-mount="${m.id}">
                   <div class="opt-col">
                     <span class="opt-name">${this.esc(m.name)}${m.id === 'feet' ? ' (Noir)' : ''}</span>
                     <span class="opt-sub">${m.id === 'feet' ? 'Pieds TPU noirs uniquement' : this.esc(m.description)}</span>
                   </div>
+                  <span class="opt-price">${p > 0 ? `+${formatEuro(p)}` : 'Inclus'}</span>
                 </button>
-              `
-              ).join('')}
+              `;
+              }).join('')}
             </div>
           </div>
 
           <div class="control-group">
             <label class="control-label">Poignées latérales (prises d'escalade)</label>
             <div class="segmented-2">
-              <button type="button" class="seg-btn ${!this.config.climbingHolds.enabled ? 'active' : ''}" data-holds-enabled="false">Aucune</button>
-              <button type="button" class="seg-btn ${this.config.climbingHolds.enabled ? 'active' : ''}" data-holds-enabled="true">Prises droite &amp; gauche</button>
+              <button type="button" class="seg-btn ${!this.config.climbingHolds.enabled ? 'active' : ''}" data-holds-enabled="false">Aucune <span class="delta">Inclus</span></button>
+              <button type="button" class="seg-btn ${this.config.climbingHolds.enabled ? 'active' : ''}" data-holds-enabled="true">Prises droite &amp; gauche <span class="delta">+${formatEuro(CUBO4_HOLDS_PRICE)}</span></button>
             </div>
             <p class="hint-text" style="margin-top:6px;">
               5426 Studio travaille avec des prises d'escalade déclassées de seconde main : les formes et coloris exacts dépendent des stocks disponibles.
@@ -541,7 +561,7 @@ export class Cubo4UI {
     `;
   }
 
-  private renderQuoteModal(): string {
+  private renderQuoteModal(total: number): string {
     const rows = this.buildSummaryLines();
     return `
       <div class="modal-backdrop" id="modal-backdrop">
@@ -549,7 +569,7 @@ export class Cubo4UI {
           <div class="modal-head">
             <div>
               <h2>Demande de devis — CUBO 4</h2>
-              <p class="quote-subtitle">Tarification sur devis · Livraison recalculée selon destination ou retrait à l'Atelier 21 (Orléans)</p>
+              <p class="quote-subtitle">Total estimé : <strong>${formatEuro(total)} TTC</strong> · À partir de ${formatEuro(CUBO4_BASE_PRICE)} TTC · Livraison non incluse (retrait Atelier 21 Orléans possible)</p>
             </div>
             <button type="button" class="btn-icon" id="btn-close-modal" title="Fermer">✕</button>
           </div>
@@ -633,6 +653,9 @@ export class Cubo4UI {
     const prevScrollEl = this.root.querySelector<HTMLElement>('.steps-scroll');
     const savedScrollTop = prevScrollEl ? prevScrollEl.scrollTop : 0;
 
+    const total = calculateCubo4Price(this.config);
+    const breakdown = getCubo4PriceBreakdown(this.config);
+
     const steps = [
       { id: 1, title: 'Caisson & Finition' },
       { id: 2, title: 'Façade, HP & Évent' },
@@ -672,11 +695,17 @@ export class Cubo4UI {
         <div class="price-summary">
           <div class="price-row-main">
             <div>
-              <div class="price-label">Tarification sur devis</div>
-              <div class="price-base-note">Livraison non incluse (selon lieu) · Retrait possible Atelier 21 (Orléans)</div>
+              <div class="price-label">Tarif estimé TTC</div>
+              <div class="price-base-note">À partir de ${formatEuro(CUBO4_BASE_PRICE)} TTC · Livraison non incluse (retrait Atelier 21 Orléans possible)</div>
             </div>
-            <div class="price-value" style="font-size:16px;">Sur devis</div>
+            <div class="price-value">${formatEuro(total)}</div>
           </div>
+          <details class="price-details">
+            <summary>Détail du chiffrage (${breakdown.length} lignes)</summary>
+            <ul>
+              ${breakdown.map((b) => `<li><span>${this.esc(b.label)}</span><span>${formatEuro(b.amount)}</span></li>`).join('')}
+            </ul>
+          </details>
         </div>
         <div class="footer-actions">
           <button type="button" class="btn-secondary" id="btn-screenshot" title="Capturer un rendu PNG">Aperçu PNG</button>
@@ -684,7 +713,7 @@ export class Cubo4UI {
         </div>
       </div>
 
-      ${this.showQuoteModal ? this.renderQuoteModal() : ''}
+      ${this.showQuoteModal ? this.renderQuoteModal(total) : ''}
       ${this.renderDescriptionModal(this.showDescriptionModal)}
       ${this.renderGalleryModal(this.showGalleryModal)}
     `;
@@ -949,7 +978,7 @@ export class Cubo4UI {
           product: 'CUBO 4',
           config: this.config,
           summary: this.buildPlainSummary(),
-          totalPrice: 0,
+          totalPrice: calculateCubo4Price(this.config),
           screenshot: this.quoteScreenshot,
           customer: this.customerForm,
         };
