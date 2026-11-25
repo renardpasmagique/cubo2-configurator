@@ -71,8 +71,8 @@ export function createPlywoodTextures(): PlywoodTextureSet {
 }
 
 /**
- * Generates expressive wood veneer ("placage bois") textures with warm honey-oak
- * base and bold dark cathedral wood grain matching the CUBO 4 prototype photos.
+ * Generates expressive wood veneer ("placage bois") textures with warm golden ash/oak
+ * base and bold flowing dark cathedral wood grain matching the CUBO 4 reference photos.
  */
 export function createWoodVeneerTextures(): PlywoodTextureSet {
   const size = 512;
@@ -87,40 +87,69 @@ export function createWoodVeneerTextures(): PlywoodTextureSet {
   bumpCanvas.height = size;
   const bCtx = bumpCanvas.getContext('2d')!;
 
-  // Warm honey-oak base
-  cCtx.fillStyle = '#c89b60';
+  // Warm golden ash/oak base matching IMG_20261003_163844321.jpg
+  cCtx.fillStyle = '#cfa86e';
   cCtx.fillRect(0, 0, size, size);
 
   bCtx.fillStyle = '#808080';
   bCtx.fillRect(0, 0, size, size);
 
-  // Bold dark cathedral grain rings (ash/zebrawood veneer look)
+  // Flowing longitudinal cathedral wood grain (stretched vertically along Y, wavy across X)
+  const imgData = cCtx.getImageData(0, 0, size, size);
+  const bData = bCtx.getImageData(0, 0, size, size);
+  const d = imgData.data;
+  const bd = bData.data;
+
   for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x += 2) {
+    const ny = y / size;
+    for (let x = 0; x < size; x++) {
       const nx = x / size;
-      const ny = y / size;
-      const dist = Math.hypot((nx - 0.45) * 1.4, (ny - 0.52) * 0.75);
-      const warp = Math.sin(ny * 14.0 + Math.cos(nx * 8.0) * 1.6) * 0.11;
-      const ring = Math.sin((dist + warp) * 54.0);
-      if (ring > 0.42) {
-        const strength = Math.min(1, (ring - 0.42) * 2.2);
-        cCtx.fillStyle = `rgba(38, 30, 22, ${0.42 + strength * 0.42})`;
-        cCtx.fillRect(x, y, 2, 1);
-        const bv = Math.max(0, Math.floor(128 - strength * 52));
-        bCtx.fillStyle = `rgb(${bv},${bv},${bv})`;
-        bCtx.fillRect(x, y, 2, 1);
+      // Elongated cathedral arch along Y + organic lateral warp
+      const arch = Math.sin(ny * Math.PI * 2.0) * 0.22 + Math.sin(ny * Math.PI * 4.0 + 1.1) * 0.08;
+      const warp = Math.sin(nx * 9.0 + ny * 6.0) * 0.06 + Math.cos(ny * 17.0 - nx * 5.0) * 0.025;
+      const u = nx + arch + warp;
+
+      // Primary & secondary growth rings
+      const ring = Math.sin(u * 34.0) * 0.65 + Math.sin(u * 72.0 + 0.7) * 0.35;
+      const idx = (y * size + x) * 4;
+
+      // Subtle warm/cool wood tone variation
+      let r = 207 + Math.round(ring * 14);
+      let g = 168 + Math.round(ring * 12);
+      let b = 110 + Math.round(ring * 9);
+      let bv = 128 + Math.round(ring * 12);
+
+      // Sharp dark charcoal-brown latewood grain bands (characteristic of ash veneer)
+      if (ring > 0.56) {
+        const t = Math.min(1, (ring - 0.56) / 0.36);
+        const darkMix = 0.35 + t * 0.55;
+        r = Math.round(r * (1 - darkMix) + 38 * darkMix);
+        g = Math.round(g * (1 - darkMix) + 31 * darkMix);
+        b = Math.round(b * (1 - darkMix) + 24 * darkMix);
+        bv = Math.round(128 - t * 48);
       }
+
+      d[idx] = Math.min(255, Math.max(0, r));
+      d[idx + 1] = Math.min(255, Math.max(0, g));
+      d[idx + 2] = Math.min(255, Math.max(0, b));
+      d[idx + 3] = 255;
+
+      bd[idx] = bd[idx + 1] = bd[idx + 2] = Math.min(255, Math.max(0, bv));
+      bd[idx + 3] = 255;
     }
   }
 
+  cCtx.putImageData(imgData, 0, 0);
+  bCtx.putImageData(bData, 0, 0);
+
   // Fine longitudinal wood pores
-  for (let i = 0; i < 1600; i++) {
+  for (let i = 0; i < 1800; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const len = 14 + Math.random() * 48;
-    const alpha = 0.08 + Math.random() * 0.14;
-    cCtx.fillStyle = Math.random() > 0.3 ? `rgba(42, 31, 20, ${alpha})` : `rgba(230, 194, 138, ${alpha})`;
-    cCtx.fillRect(x, y, len, 1);
+    const len = 12 + Math.random() * 42;
+    const alpha = 0.06 + Math.random() * 0.11;
+    cCtx.fillStyle = Math.random() > 0.35 ? `rgba(42, 32, 22, ${alpha})` : `rgba(235, 202, 148, ${alpha})`;
+    cCtx.fillRect(x, y, 1.2, len);
   }
 
   const map = new THREE.CanvasTexture(colorCanvas);
