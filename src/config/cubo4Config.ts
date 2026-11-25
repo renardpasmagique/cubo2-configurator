@@ -1,5 +1,6 @@
 import {
   ColorOption,
+  formatEuro,
   METAL_FINISHES,
   MetalFinishId,
   MOUNT_OPTIONS,
@@ -9,6 +10,21 @@ import {
   MountType,
   ScrewColor,
 } from './pricing';
+
+export const CUBO4_BASE_PRICE = 1350;
+export const CUBO4_WOOD_VENEER_PRICE = 50;
+export const CUBO4_FACE_COLOR_PRICE = 30;
+export const CUBO4_HOLDS_PRICE = 50;
+export const CUBO4_METAL_PRICES: Record<MetalFinishId, number> = {
+  raw_alu: 150,
+  brushed_alu: 150,
+  anthracite_steel: 100,
+};
+export const CUBO4_MOUNT_PRICES: Record<MountType, number> = {
+  none: 0,
+  feet: 30,
+  castors: 30,
+};
 
 export type Cubo4BodyType = 'plywood' | 'wood_veneer' | 'paint';
 export type Cubo4FrontMode = 'wood_hp' | 'metal_plate';
@@ -130,5 +146,40 @@ export function createRandomCubo4Config(currentText = ''): Cubo4Config {
   };
 }
 
-export { METAL_FINISHES, MOUNT_OPTIONS, PAINT_COLORS, PETG_COLORS, PLAQUE_TEXT_COLORS };
+export function getCubo4PriceBreakdown(config: Cubo4Config): Array<{ label: string; amount: number }> {
+  const items: Array<{ label: string; amount: number }> = [
+    { label: 'Enceinte CUBO 4 (Base)', amount: CUBO4_BASE_PRICE },
+  ];
+  if (config.bodyFinish.type === 'wood_veneer') {
+    items.push({ label: 'Placage bois', amount: CUBO4_WOOD_VENEER_PRICE });
+  }
+  if (config.frontMode === 'metal_plate') {
+    const mf = METAL_FINISHES.find((m) => m.id === config.frontPlate.finish);
+    items.push({
+      label: `Plaque métal (${mf?.name ?? config.frontPlate.finish})`,
+      amount: CUBO4_METAL_PRICES[config.frontPlate.finish],
+    });
+  } else if (!config.frontFaceColor.sameAsBody) {
+    const fp = PAINT_COLORS.find((p) => p.id === config.frontFaceColor.paintId);
+    items.push({
+      label: `Façade colorée (${fp?.name ?? ''})`,
+      amount: CUBO4_FACE_COLOR_PRICE,
+    });
+  }
+  const mountDelta = CUBO4_MOUNT_PRICES[config.mount];
+  if (mountDelta > 0) {
+    const mo = MOUNT_OPTIONS.find((m) => m.id === config.mount);
+    items.push({ label: mo?.name ?? config.mount, amount: mountDelta });
+  }
+  if (config.climbingHolds.enabled) {
+    items.push({ label: "Poignées prises d'escalade", amount: CUBO4_HOLDS_PRICE });
+  }
+  return items;
+}
+
+export function calculateCubo4Price(config: Cubo4Config): number {
+  return getCubo4PriceBreakdown(config).reduce((sum, item) => sum + item.amount, 0);
+}
+
+export { formatEuro, METAL_FINISHES, MOUNT_OPTIONS, PAINT_COLORS, PETG_COLORS, PLAQUE_TEXT_COLORS };
 export type { ColorOption, MetalFinishId };
