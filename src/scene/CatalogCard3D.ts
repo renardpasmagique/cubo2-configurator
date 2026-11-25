@@ -241,7 +241,7 @@ export class CatalogCard3D {
           if (item.kind === 'cubo2') {
             const obj = this.buildRandomCubo2(gltf.scene);
             this.attachCardSlot(item.card, item.imgEl, item.kind, obj, size, 0.36, -0.45);
-          } else if (item.kind !== 'relica3') {
+          } else if (item.kind === 'horn_3x4' || item.kind === 'horn_2x5' || item.kind === 'horn_oval') {
             const hType: HornType =
               item.kind === 'horn_3x4' ? '3x4' : item.kind === 'horn_2x5' ? '2x5' : 'oval';
             const obj = this.buildRandomHorn(gltf.scene, hType);
@@ -434,7 +434,7 @@ export class CatalogCard3D {
     initialAngleY: number
   ): CardSlot | null {
     const linkEl = imgEl.closest('.product-miniature__image-link') as HTMLElement | null;
-    if (!linkEl) return null;
+    if (!linkEl || linkEl.querySelector('.sf3d-card-canvas')) return null;
 
     // Compute bounding sphere to guarantee ~65-72% height framing with zero edge cropping on 360° spin
     object.updateMatrixWorld(true);
