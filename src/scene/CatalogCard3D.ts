@@ -60,7 +60,7 @@ export class CatalogCard3D {
 
     const cardConfigs: Array<{ id: number; kind: CardKind; title?: string; priceLabel?: string }> = [
       { id: 8, kind: 'cubo2', title: 'CUBO 2 Configurateur', priceLabel: 'À partir de 1 650,00 €' },
-      { id: 11, kind: 'cubo4', title: 'CUBO 4 Configurateur', priceLabel: 'Sur devis' },
+      { id: 11, kind: 'cubo4', title: 'CUBO 4 Configurateur', priceLabel: 'À partir de 1 350,00 €' },
       {
         id: 1,
         kind: 'horn_3x4',
