@@ -2008,3 +2008,51 @@ html.sf3d-dark .format-segmented .seg-btn.active .delta {
     grid-template-columns: 1fr;
   }
 }
+
+/* v0.5.9 - Mobile: modele 3D fixe en haut, scroll interne dans les options uniquement,
+   puis scroll-chaining vers la page (produits similaires) une fois arrive en bas du panneau */
+@media (max-width: 900px) {
+  .app-layout,
+  #sf3d-cubo2-root .app-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    height: calc(100dvh - var(--sf3d-header-h, 56px)) !important;
+    min-height: 520px !important;
+    overflow: hidden !important;
+  }
+
+  .stage-area {
+    flex: 0 0 38dvh !important;
+    height: 38dvh !important;
+    min-height: 220px !important;
+    max-height: 340px !important;
+    overflow: hidden !important;
+  }
+
+  .stage-area .viewport {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .config-panel {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  .config-panel .panel-header,
+  .config-panel .panel-footer {
+    flex: 0 0 auto !important;
+  }
+
+  .config-panel .steps-scroll {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: auto !important;
+  }
+}
