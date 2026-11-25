@@ -1,13 +1,16 @@
 import './style.css';
 import { createDefaultConfig, createRandomConfig, Cubo2Config, HornType } from './config/pricing';
+import { createDefaultCubo4Config, createRandomCubo4Config, Cubo4Config } from './config/cubo4Config';
 import { CatalogCard3D } from './scene/CatalogCard3D';
 import { CathedraleHero } from './scene/CathedraleHero';
 import { CameraPreset, Cubo2Viewer } from './scene/Cubo2Viewer';
+import { Cubo4Viewer } from './scene/Cubo4Viewer';
 import { HornFileViewer } from './scene/HornFileViewer';
 import { Relica3Viewer } from './scene/Relica3Viewer';
 import { injectProductSeoJsonLd } from './seo/structuredData';
 import { initThemeAndPortfolioLinks } from './theme';
 import { ConfiguratorUI } from './ui/ConfiguratorUI';
+import { Cubo4UI } from './ui/Cubo4UI';
 import { FILE_PRODUCTS, FileProductUI, HornPurchaseFormat, PolicyLink } from './ui/FileProductUI';
 import { Relica3ProductUI } from './ui/Relica3ProductUI';
 
@@ -120,6 +123,11 @@ function detectHornProduct(idProduct: number): { hornType: HornType; initialForm
 function isRelica3Product(idProduct: number): boolean {
   if (idProduct === 10) return true;
   return window.location.pathname.toLowerCase().includes('10-relica-3');
+}
+
+function isCubo4Product(idProduct: number): boolean {
+  if (idProduct === 11) return true;
+  return window.location.pathname.toLowerCase().includes('cubo-4');
 }
 
 const HOME_MARKUP = `
@@ -238,8 +246,70 @@ if (psHomeRoot && !psProductRoot) {
 
   const hornProduct = detectHornProduct(win.SF3D_ID_PRODUCT || 0);
   const isRelica3 = isRelica3Product(win.SF3D_ID_PRODUCT || 0);
+  const isCubo4 = isCubo4Product(win.SF3D_ID_PRODUCT || 0);
 
-  if (isRelica3) {
+  if (isCubo4) {
+    const viewportEl = document.getElementById('viewport')!;
+    const panelEl = document.getElementById('panel')!;
+    const loaderEl = document.getElementById('loader')!;
+    const camBarEl = document.getElementById('cam-bar')!;
+
+    let currentConfig: Cubo4Config = createDefaultCubo4Config();
+    let dimensionsVisible = false;
+
+    const cubo4Viewer = new Cubo4Viewer(
+      viewportEl,
+      () => {
+        loaderEl.classList.add('is-hidden');
+        cubo4Viewer.applyConfig(currentConfig);
+      },
+      () => {
+        loaderEl.innerHTML = '<span class="loader-err">Erreur de chargement du modèle 3D CUBO 4.</span>';
+      }
+    );
+
+    camBarEl.innerHTML = `
+      <button type="button" class="cam-btn" id="btn-toggle-dim" aria-pressed="false" title="Afficher / masquer les cotes">
+        Cotation
+      </button>
+    `;
+    const dimBtn = document.getElementById('btn-toggle-dim');
+    dimBtn?.addEventListener('click', () => {
+      dimensionsVisible = !dimensionsVisible;
+      cubo4Viewer.setDimensionsVisible(dimensionsVisible);
+      dimBtn.classList.toggle('active', dimensionsVisible);
+      dimBtn.setAttribute('aria-pressed', dimensionsVisible ? 'true' : 'false');
+    });
+
+    const cubo4UI = new Cubo4UI(
+      panelEl,
+      currentConfig,
+      {
+        onConfigChange: (cfg) => {
+          currentConfig = cfg;
+          cubo4Viewer.applyConfig(cfg);
+        },
+        onScreenshot: () => cubo4Viewer.takeScreenshot(),
+        onReset: () => {
+          currentConfig = createDefaultCubo4Config();
+          cubo4Viewer.applyConfig(currentConfig);
+          cubo4UI.setConfig(currentConfig);
+        },
+        onRandomize: () => {
+          currentConfig = createRandomCubo4Config(currentConfig.badge.text);
+          cubo4Viewer.applyConfig(currentConfig);
+          cubo4UI.setConfig(currentConfig);
+        },
+      },
+      scrapedPhotos
+    );
+
+    if (document.fonts) {
+      document.fonts.load('400 32px "GothicPixels"').then(() => {
+        cubo4Viewer.refreshPlaque(currentConfig);
+      });
+    }
+  } else if (isRelica3) {
     const viewportEl = document.getElementById('viewport')!;
     const panelEl = document.getElementById('panel')!;
     const loaderEl = document.getElementById('loader')!;
