@@ -1,0 +1,113 @@
+import {
+  ColorOption,
+  METAL_FINISHES,
+  MetalFinishId,
+  MOUNT_OPTIONS,
+  PAINT_COLORS,
+  PETG_COLORS,
+  PLAQUE_TEXT_COLORS,
+  MountType,
+} from './pricing';
+
+export type Cubo4BodyType = 'plywood' | 'wood_veneer' | 'paint';
+export type Cubo4FrontMode = 'wood_hp' | 'metal_plate';
+
+export interface Cubo4Config {
+  bodyFinish: {
+    type: Cubo4BodyType;
+    paintId: string;
+    paintSheen: 'mat' | 'satine';
+  };
+  frontMode: Cubo4FrontMode;
+  frontFaceColor: {
+    sameAsBody: boolean;
+    paintId: string;
+    paintSheen: 'mat' | 'satine';
+  };
+  frontPlate: {
+    finish: MetalFinishId;
+  };
+  showHpCover: boolean;
+  frontPetgId: string;
+  hornColorId: string;
+  mount: MountType;
+  badge: {
+    plateColorId: string;
+    textColorId: string;
+    text: string;
+  };
+}
+
+export function createDefaultCubo4Config(): Cubo4Config {
+  const defaultHorn = PETG_COLORS.find((c) => /translucent|transparent/i.test(c.name)) || PETG_COLORS[0];
+  const defaultFrontPetg = PETG_COLORS.find((c) => /bleu|blue/i.test(c.name)) || PETG_COLORS[0];
+  return {
+    bodyFinish: {
+      type: 'wood_veneer',
+      paintId: PAINT_COLORS[0].id,
+      paintSheen: 'mat',
+    },
+    frontMode: 'wood_hp',
+    frontFaceColor: {
+      sameAsBody: true,
+      paintId: PAINT_COLORS[0].id,
+      paintSheen: 'mat',
+    },
+    frontPlate: {
+      finish: 'brushed_alu',
+    },
+    showHpCover: true,
+    frontPetgId: defaultFrontPetg.id,
+    hornColorId: defaultHorn.id,
+    mount: 'feet',
+    badge: {
+      plateColorId: defaultHorn.id,
+      textColorId: PLAQUE_TEXT_COLORS[0].id,
+      text: '',
+    },
+  };
+}
+
+export function createRandomCubo4Config(currentText = ''): Cubo4Config {
+  const pick = <T>(arr: readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
+  const bodyTypes: Cubo4BodyType[] = ['plywood', 'wood_veneer', 'paint'];
+  const bodyType = pick(bodyTypes);
+  const bodyPaint = pick(PAINT_COLORS);
+  const bodySheen = pick(['mat', 'satine'] as const);
+  const frontMode: Cubo4FrontMode = Math.random() < 0.35 ? 'metal_plate' : 'wood_hp';
+  const metalFinishes = ['raw_alu', 'brushed_alu', 'anthracite_steel'] as const;
+  const mounts = MOUNT_OPTIONS.map((m) => m.id);
+  const plateColor = pick(PETG_COLORS);
+  const isPlateDark = parseInt(plateColor.hex.slice(1, 3), 16) * 0.299 +
+    parseInt(plateColor.hex.slice(3, 5), 16) * 0.587 +
+    parseInt(plateColor.hex.slice(5, 7), 16) * 0.114 < 128;
+
+  return {
+    bodyFinish: {
+      type: bodyType,
+      paintId: bodyPaint.id,
+      paintSheen: bodySheen,
+    },
+    frontMode,
+    frontFaceColor: {
+      sameAsBody: Math.random() < 0.55,
+      paintId: pick(PAINT_COLORS).id,
+      paintSheen: pick(['mat', 'satine'] as const),
+    },
+    frontPlate: {
+      finish: pick(metalFinishes),
+    },
+    showHpCover: frontMode === 'wood_hp' ? Math.random() < 0.78 : false,
+    frontPetgId: pick(PETG_COLORS).id,
+    hornColorId: pick(PETG_COLORS).id,
+    mount: pick(mounts),
+    badge: {
+      plateColorId: plateColor.id,
+      textColorId: isPlateDark ? 'txt-white' : 'txt-black',
+      text: currentText,
+    },
+  };
+}
+
+export { METAL_FINISHES, MOUNT_OPTIONS, PAINT_COLORS, PETG_COLORS, PLAQUE_TEXT_COLORS };
+export type { ColorOption, MetalFinishId };
