@@ -165,7 +165,7 @@ export class ConfiguratorUI {
           <div class="price-row-main">
             <div>
               <div class="price-label">Tarif estimé TTC (la paire)</div>
-              <div class="price-base-note">À partir de ${formatEuro(this.config.basePrice)} TTC la paire</div>
+              <div class="price-base-note">À partir de ${formatEuro(this.config.basePrice)} TTC · Livraison non incluse (retrait Atelier 21 Orléans possible)</div>
             </div>
             <div class="price-value">${formatEuro(total)}</div>
           </div>
@@ -546,25 +546,30 @@ export class ConfiguratorUI {
               <li><strong>Pavillon Acoustique Elliptique 5426 Studio</strong> : profil elliptique compact à transition fluide (90° H × 55° V).</li>
             </ul>
 
-            <h3>Filtre passif haute fidélité : CROSS 2 (5426 Studio)</h3>
+            <h3>Filtre passif : CROSS 2 (5426 Studio)</h3>
             <p>
-              CUBO 2 repose sur le crossover passif 2 voies sur mesure <strong>CROSS 2</strong>, conçu pour exploiter
-              pleinement le potentiel du haut-parleur 15" et de la compression en écoute audiophile comme en
-              sonorisation forte puissance :
+              CUBO 2 intègre le crossover passif 2 voies <strong>CROSS 2</strong>, calibré pour le haut-parleur 15&quot; et
+              le moteur à compression :
             </p>
             <ul>
-              <li><strong>Topologie Linkwitz-Riley 2e ordre (12 dB/octave)</strong> : fréquence de coupure calibrée à 2,4 kHz (compatible 2,8 kHz) garantissant une transition de phase exemplaire et une scène sonore précise.</li>
-              <li><strong>Tenue en puissance 400 W RMS (800 W crête) sous 8 Ω</strong> : pistes de puissance de 6,0 mm, double plan de masse en cuivre lourd 2 oz (70 µm) et atténuateur d'aigu L-Pad renforcé de 40 W.</li>
-              <li><strong>Composants audiophiles &amp; zéro diaphonie</strong> : condensateurs polypropylène MKP 250 V / 400 V, bobines à très faible résistance série (Rdc &lt; 0,25 Ω) disposées à 90°.</li>
-              <li><strong>Fabrication professionnelle</strong> : PCB 220 × 150 mm Noir Mat et dorure or véritable (ENIG), maintien anti-vibrations et borniers haute intensité (30 A).</li>
+              <li><strong>Topologie Linkwitz-Riley 2e ordre (12 dB/octave)</strong> : coupure à 2,4 kHz (compatible 2,8 kHz).</li>
+              <li><strong>Tenue en puissance 400 W RMS (800 W crête) sous 8 Ω</strong> : pistes de puissance 6,0 mm, cuivre 2 oz (70 µm) et atténuateur L-Pad 40 W.</li>
+              <li><strong>Composants</strong> : condensateurs polypropylène MKP 250 V / 400 V, bobines faible résistance (Rdc &lt; 0,25 Ω) orientées à 90°.</li>
+              <li><strong>Fabrication</strong> : PCB 220 × 150 mm Noir Mat, finition or ENIG, borniers 30 A.</li>
             </ul>
 
-            <h3>Personnalisation &amp; Options sur mesure</h3>
+            <h3>Personnalisation &amp; Options</h3>
             <ul>
-              <li><strong>Caisson &amp; Façade</strong> : contreplaqué verni ou peinture sur mesure, arêtes brutes ou arrondies, façade enfoncée, façade bois affleurante ou plaque métal affleurante.</li>
+              <li><strong>Caisson &amp; Façade</strong> : contreplaqué verni ou peinture, arêtes brutes ou arrondies, façade enfoncée, façade bois affleurante ou plaque métal affleurante.</li>
               <li><strong>Plaque d'identification</strong> : couleur de la plaque PETG, couleur du texte et inscription personnalisable sous « cubo 2 ».</li>
-              <li><strong>Piétements &amp; mobilité</strong> : pieds usinés sur mesure ou roulettes pivotantes avec frein.</li>
+              <li><strong>Piétements &amp; mobilité</strong> : pieds TPU ou roulettes pivotantes avec frein.</li>
             </ul>
+
+            <h3>Livraison &amp; Retrait</h3>
+            <p>
+              La livraison n'est pas incluse dans le tarif : les frais sont recalculés en fonction du lieu de livraison.
+              Il est également possible de venir récupérer votre commande sur place à l'<strong>Atelier 21 (Orléans)</strong>.
+            </p>
           </div>
         </div>
       </div>
@@ -671,7 +676,7 @@ export class ConfiguratorUI {
           <div class="modal-head">
             <div>
               <h2>Demande de devis — CUBO 2</h2>
-              <p class="quote-subtitle">Total estimé : <strong>${formatEuro(total)} TTC</strong> (la paire) · À partir de ${formatEuro(this.config.basePrice)} TTC</p>
+              <p class="quote-subtitle">Total estimé : <strong>${formatEuro(total)} TTC</strong> (la paire) · Livraison non incluse (recalculée selon destination) · Retrait possible Atelier 21 (Orléans)</p>
             </div>
             <button class="btn-icon" id="btn-close-modal" title="Fermer">✕</button>
           </div>

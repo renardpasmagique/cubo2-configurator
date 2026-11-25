@@ -7,7 +7,6 @@ import {
   PETG_COLORS,
   PLAQUE_TEXT_COLORS,
 } from '../config/cubo4Config';
-import { renderSimilarProductsModal } from '../data/catalogLinks';
 
 export interface Cubo4UIHandlers {
   onConfigChange: (config: Cubo4Config) => void;
@@ -25,7 +24,6 @@ export class Cubo4UI {
   private showDescriptionModal = false;
   private showGalleryModal = false;
   private lightboxIdx: number | null = null;
-  private showSimilarModal = false;
   private photos: string[] = [];
   private quoteScreenshot = '';
   private copyToast = '';
@@ -139,6 +137,11 @@ export class Cubo4UI {
 
     const hornPetg = PETG_COLORS.find((c) => c.id === this.config.hornColorId)?.name || '';
     const mountLabel = MOUNT_OPTIONS.find((m) => m.id === this.config.mount)?.name || '';
+    const leftHoldName = PETG_COLORS.find((c) => c.id === this.config.climbingHolds.leftColorId)?.name || '';
+    const rightHoldName = PETG_COLORS.find((c) => c.id === this.config.climbingHolds.rightColorId)?.name || '';
+    const holdsLabel = this.config.climbingHolds.enabled
+      ? `Oui (Gauche: ${leftHoldName} / Droite: ${rightHoldName} — prises déclassées selon stock)`
+      : 'Aucune';
     const platePetg = PETG_COLORS.find((c) => c.id === this.config.badge.plateColorId)?.name || '';
     const textCol = PLAQUE_TEXT_COLORS.find((t) => t.id === this.config.badge.textColorId)?.name || '';
 
@@ -146,9 +149,10 @@ export class Cubo4UI {
       ['1. Caisson', bodyLabel],
       ['2. Façade & Évent', frontLabel],
       ['3. Pavillon', `Elliptique (Oval) · ${hornPetg}`],
-      ['4. Piètement', mountLabel],
+      ['4. Piètement', mountLabel + (this.config.mount === 'feet' ? ' (Noir)' : '')],
+      ['5. Poignées', holdsLabel],
       [
-        '5. Plaque',
+        '6. Plaque',
         `${platePetg}${this.config.badge.text.trim() ? ` · « ${this.config.badge.text.trim()} » (${textCol})` : ` · Texte ${textCol}`}`,
       ],
     ];
@@ -335,7 +339,9 @@ export class Cubo4UI {
         `;
       }
 
-      case 4:
+      case 4: {
+        const leftHold = PETG_COLORS.find((c) => c.id === this.config.climbingHolds.leftColorId) || PETG_COLORS[0];
+        const rightHold = PETG_COLORS.find((c) => c.id === this.config.climbingHolds.rightColorId) || PETG_COLORS[0];
         return `
           <div class="control-group">
             <label class="control-label">Piètement &amp; mobilité</label>
@@ -344,15 +350,58 @@ export class Cubo4UI {
                 (m) => `
                 <button type="button" class="option-row ${this.config.mount === m.id ? 'active' : ''}" data-mount="${m.id}">
                   <div class="opt-col">
-                    <span class="opt-name">${this.esc(m.name)}</span>
-                    <span class="opt-sub">${this.esc(m.description)}</span>
+                    <span class="opt-name">${this.esc(m.name)}${m.id === 'feet' ? ' (Noir)' : ''}</span>
+                    <span class="opt-sub">${m.id === 'feet' ? 'Pieds TPU noirs uniquement' : this.esc(m.description)}</span>
                   </div>
                 </button>
               `
               ).join('')}
             </div>
           </div>
+
+          <div class="control-group">
+            <label class="control-label">Poignées latérales (prises d'escalade)</label>
+            <div class="segmented-2">
+              <button type="button" class="seg-btn ${!this.config.climbingHolds.enabled ? 'active' : ''}" data-holds-enabled="false">Aucune</button>
+              <button type="button" class="seg-btn ${this.config.climbingHolds.enabled ? 'active' : ''}" data-holds-enabled="true">Prises droite &amp; gauche</button>
+            </div>
+            <p class="hint-text" style="margin-top:6px;">
+              5426 Studio travaille avec des prises d'escalade déclassées de seconde main : les formes et coloris exacts dépendent des stocks disponibles.
+            </p>
+          </div>
+
+          ${
+            this.config.climbingHolds.enabled
+              ? `
+            <div class="control-group">
+              <label class="control-label">Couleur 1 (Prise gauche) — <strong>${this.esc(leftHold.name)}</strong></label>
+              <div class="swatch-grid">
+                ${PETG_COLORS.filter((c) => !c.translucent)
+                  .map(
+                    (c) => `
+                  <button type="button" class="swatch ${this.config.climbingHolds.leftColorId === c.id ? 'active' : ''}" style="background:${c.hex}" title="${this.esc(c.name)}" data-hold-left="${c.id}"></button>
+                `
+                  )
+                  .join('')}
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Couleur 2 (Prise droite) — <strong>${this.esc(rightHold.name)}</strong></label>
+              <div class="swatch-grid">
+                ${PETG_COLORS.filter((c) => !c.translucent)
+                  .map(
+                    (c) => `
+                  <button type="button" class="swatch ${this.config.climbingHolds.rightColorId === c.id ? 'active' : ''}" style="background:${c.hex}" title="${this.esc(c.name)}" data-hold-right="${c.id}"></button>
+                `
+                  )
+                  .join('')}
+              </div>
+            </div>
+          `
+              : ''
+          }
         `;
+      }
 
       case 5: {
         const platePetg = PETG_COLORS.find((c) => c.id === this.config.badge.plateColorId) || PETG_COLORS[0];
@@ -409,24 +458,29 @@ export class Cubo4UI {
           </div>
           <div class="desc-content">
             <p class="desc-lead">
-              L'enceinte <strong>CUBO 4</strong> est le modèle studio compact 2 voies de 5426 Studio, associant un
-              haut-parleur grave-médium de 6,5&quot; en charge bass-reflex accordée et le
-              <strong>pavillon acoustique elliptique</strong> imprimé en 3D PETG avec moteur à compression 1&quot;.
+              <strong>CUBO 4</strong> est une enceinte 2 voies compacte de <strong>200 W RMS sous 8 Ω</strong>. Elle associe un
+              haut-parleur grave-médium de 6,5&quot; en charge bass-reflex et le <strong>pavillon elliptique</strong> imprimé en
+              3D PETG avec moteur à compression 1&quot;.
             </p>
-            <h3>Filtre passif haute fidélité : CROSS 2 (5426 Studio)</h3>
+            <h3>Filtre passif : carte CROSS 2</h3>
             <p>
-              Comme la CUBO 2, la CUBO 4 est équipée de la carte crossover passif 2 voies sur mesure
-              <strong>CROSS 2</strong> : topologie Linkwitz-Riley 2e ordre (12 dB/octave), condensateurs polypropylène
-              MKP audiophiles, bobines à faible résistance série, double plan de masse cuivre lourd 2 oz et finition
-              dorure or véritable (ENIG).
+              La CUBO 4 intègre la carte crossover passif 2 voies <strong>CROSS 2</strong> (identique à la CUBO 2) :
+              filtrage Linkwitz-Riley 2e ordre (12 dB/octave) à 2,4 kHz, condensateurs polypropylène MKP, pistes cuivre
+              2 oz et finition ENIG.
+              <a href="https://www.5426.fr/" target="_blank" rel="noopener noreferrer">Voir les détails sur 5426.fr →</a>
             </p>
-            <h3>Personnalisation &amp; Options</h3>
+            <h3>Options &amp; Finitions</h3>
             <ul>
-              <li><strong>Caisson</strong> : placage bois naturel, contreplaqué verni ou peinture studio (Mat / Satiné).</li>
-              <li><strong>Façade</strong> : façade bois (assortie ou colorée) avec contour HP 3D, ou plaque métal affleurante (Aluminium Brut, Aluminium Brossé, Acier Gris Anthracite) avec évent spécial.</li>
-              <li><strong>Pavillon</strong> : pavillon elliptique (Oval) disponible dans tout le catalogue couleur PETG.</li>
-              <li><strong>Plaque bornier</strong> : plaque 60 × 100 mm personnalisable sur le dessus avec 4 fiches bananes dorées.</li>
+              <li><strong>Caisson</strong> : placage bois, contreplaqué verni ou peinture (Mat / Satiné).</li>
+              <li><strong>Façade</strong> : façade bois (assortie ou colorée) avec contour HP 3D, ou plaque métal affleurante (Aluminium Brut, Aluminium Brossé, Acier Gris Anthracite) avec évent dédié.</li>
+              <li><strong>Pieds &amp; Poignées</strong> : pieds TPU noirs ou roulettes ; poignées latérales en prises d'escalade (5426 Studio travaille avec des prises déclassées de seconde main, selon les stocks disponibles).</li>
+              <li><strong>Plaque bornier</strong> : plaque 60 × 100 mm personnalisable sur le dessus.</li>
             </ul>
+            <h3>Livraison &amp; Retrait</h3>
+            <p>
+              La livraison n'est pas incluse dans le tarif : les frais sont recalculés en fonction du lieu de livraison.
+              Il est également possible de venir récupérer votre commande sur place à l'<strong>Atelier 21 (Orléans)</strong>.
+            </p>
           </div>
         </div>
       </div>
@@ -486,7 +540,7 @@ export class Cubo4UI {
           <div class="modal-head">
             <div>
               <h2>Demande de devis — CUBO 4</h2>
-              <p class="quote-subtitle">Tarification sur devis selon configuration</p>
+              <p class="quote-subtitle">Tarification sur devis · Livraison recalculée selon destination ou retrait à l'Atelier 21 (Orléans)</p>
             </div>
             <button type="button" class="btn-icon" id="btn-close-modal" title="Fermer">✕</button>
           </div>
@@ -574,7 +628,7 @@ export class Cubo4UI {
       { id: 1, title: 'Caisson & Finition' },
       { id: 2, title: 'Façade, HP & Évent' },
       { id: 3, title: 'Pavillon Elliptique' },
-      { id: 4, title: 'Piètements & Mobilité' },
+      { id: 4, title: 'Piètements & Poignées' },
       { id: 5, title: "Plaque d'identification" },
     ];
 
@@ -585,7 +639,6 @@ export class Cubo4UI {
           <div class="header-btns">
             ${this.photos.length > 0 ? '<button type="button" class="btn-icon" id="btn-gallery" title="Galerie photos">Photos</button>' : ''}
             <button type="button" class="btn-icon" id="btn-desc" title="Descriptif &amp; Spécifications">Descriptif</button>
-            <button type="button" class="btn-icon" id="btn-similar" title="Autres produits">Autres</button>
           </div>
         </div>
       </div>
@@ -611,7 +664,7 @@ export class Cubo4UI {
           <div class="price-row-main">
             <div>
               <div class="price-label">Tarification sur devis</div>
-              <div class="price-base-note">Configuration 3D prête</div>
+              <div class="price-base-note">Livraison non incluse (selon lieu) · Retrait possible Atelier 21 (Orléans)</div>
             </div>
             <div class="price-value" style="font-size:16px;">Sur devis</div>
           </div>
@@ -625,7 +678,6 @@ export class Cubo4UI {
       ${this.showQuoteModal ? this.renderQuoteModal() : ''}
       ${this.renderDescriptionModal(this.showDescriptionModal)}
       ${this.renderGalleryModal(this.showGalleryModal)}
-      ${renderSimilarProductsModal(11, this.showSimilarModal)}
     `;
 
     const nextScrollEl = this.root.querySelector<HTMLElement>('.steps-scroll');
@@ -722,6 +774,27 @@ export class Cubo4UI {
       });
     });
 
+    this.root.querySelectorAll<HTMLElement>('[data-holds-enabled]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.config.climbingHolds.enabled = btn.dataset.holdsEnabled === 'true';
+        this.emitChange();
+      });
+    });
+
+    this.root.querySelectorAll<HTMLElement>('[data-hold-left]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.config.climbingHolds.leftColorId = btn.dataset.holdLeft!;
+        this.emitChange();
+      });
+    });
+
+    this.root.querySelectorAll<HTMLElement>('[data-hold-right]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.config.climbingHolds.rightColorId = btn.dataset.holdRight!;
+        this.emitChange();
+      });
+    });
+
     this.root.querySelectorAll<HTMLElement>('[data-plate-color]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.badge.plateColorId = btn.dataset.plateColor!;
@@ -800,21 +873,6 @@ export class Cubo4UI {
       e.stopPropagation();
       if (this.lightboxIdx !== null && this.photos.length > 0) {
         this.lightboxIdx = (this.lightboxIdx + 1) % this.photos.length;
-        this.render();
-      }
-    });
-
-    this.root.querySelector('#btn-similar')?.addEventListener('click', () => {
-      this.showSimilarModal = true;
-      this.render();
-    });
-    this.root.querySelector('#btn-close-similar')?.addEventListener('click', () => {
-      this.showSimilarModal = false;
-      this.render();
-    });
-    this.root.querySelector('#similar-modal-backdrop')?.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).id === 'similar-modal-backdrop') {
-        this.showSimilarModal = false;
         this.render();
       }
     });
