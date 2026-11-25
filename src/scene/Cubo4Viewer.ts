@@ -208,7 +208,7 @@ export class Cubo4Viewer {
             mesh.material = this.frontPetgMat;
           } else if (name === 'woofer_frame') {
             mesh.material = this.wooferFrameMat;
-          } else if (name === 'woofer_screws') {
+          } else if (name === 'woofer_screws' || name === 'facade_screws') {
             mesh.material = this.screwMat;
           } else if (name === 'woofer_surround') {
             mesh.material = this.wooferSurroundMat;
@@ -253,6 +253,7 @@ export class Cubo4Viewer {
           'driver_oval_metal',
           'woofer_frame',
           'woofer_screws',
+          'facade_screws',
           'woofer_surround',
           'woofer_cone',
           'woofer_dustcap',
@@ -348,6 +349,11 @@ export class Cubo4Viewer {
       if (wm) wm.position.z = wooferZ;
     }
 
+    // Front screws (4 corners + 4 aligned on front) & woofer screws share screwColor
+    this.screwMat.color.setHex(config.screwColor === 'silver' ? 0xc8cdd4 : 0x1a1b1e);
+    const facadeScrewMesh = this.meshes.get('facade_screws');
+    if (facadeScrewMesh) facadeScrewMesh.position.z = isMetal ? 0.0020 : 0.0;
+
     // Body finish
     this.applyWoodOrPaint(
       this.bodyMat,
@@ -356,8 +362,8 @@ export class Cubo4Viewer {
       config.bodyFinish.paintSheen
     );
 
-    // Front baffle finish
-    if (config.frontFaceColor.sameAsBody) {
+    // Front baffle finish (when Plaque métal is active, colored front face is disabled -> match body)
+    if (isMetal || config.frontFaceColor.sameAsBody) {
       this.applyWoodOrPaint(
         this.baffleMat,
         config.bodyFinish.type,
