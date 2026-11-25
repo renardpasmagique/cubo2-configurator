@@ -156,10 +156,6 @@ const APP_MARKUP = `
         <button type="button" class="photo-nav-btn photo-nav-prev" id="btn-photo-prev" title="Photo précédente">‹</button>
         <img id="photo-stage-img" class="photo-stage-img" src="" alt="Aperçu photo" />
         <button type="button" class="photo-nav-btn photo-nav-next" id="btn-photo-next" title="Photo suivante">›</button>
-        <div class="photo-stage-bar">
-          <span id="photo-stage-counter" class="photo-stage-counter">1 / 1</span>
-          <button type="button" class="btn-secondary btn-sm" id="btn-back-to-3d">Retour à la vue 3D →</button>
-        </div>
       </div>
       <div id="loader" class="loader-overlay">
         <div class="spinner"></div>
@@ -323,7 +319,7 @@ if (psHomeRoot && !psProductRoot) {
     const loaderEl = document.getElementById('loader')!;
     const photoStageEl = document.getElementById('photo-stage')!;
     const photoImgEl = document.getElementById('photo-stage-img') as HTMLImageElement;
-    const photoCounterEl = document.getElementById('photo-stage-counter')!;
+    const photoCounterEl = document.getElementById('photo-stage-counter');
     const camBarEl = document.getElementById('cam-bar')!;
     const orbitHintEl = document.getElementById('orbit-hint')!;
 
@@ -346,7 +342,7 @@ if (psHomeRoot && !psProductRoot) {
         camBarEl.classList.add('is-hidden');
         orbitHintEl.classList.add('is-hidden');
         photoImgEl.src = scrapedPhotos[currentPhotoIdx] || scrapedPhotos[0];
-        photoCounterEl.textContent = `Photo ${currentPhotoIdx + 1} / ${scrapedPhotos.length}`;
+        if (photoCounterEl) photoCounterEl.textContent = `Photo ${currentPhotoIdx + 1} / ${scrapedPhotos.length}`;
       } else {
         photoStageEl.classList.add('is-hidden');
         camBarEl.classList.remove('is-hidden');
@@ -418,7 +414,7 @@ if (psHomeRoot && !psProductRoot) {
     const loaderEl = document.getElementById('loader')!;
     const photoStageEl = document.getElementById('photo-stage')!;
     const photoImgEl = document.getElementById('photo-stage-img') as HTMLImageElement;
-    const photoCounterEl = document.getElementById('photo-stage-counter')!;
+    const photoCounterEl = document.getElementById('photo-stage-counter');
     const camBarEl = document.getElementById('cam-bar')!;
     const orbitHintEl = document.getElementById('orbit-hint')!;
 
@@ -442,7 +438,7 @@ if (psHomeRoot && !psProductRoot) {
         camBarEl.classList.add('is-hidden');
         orbitHintEl.classList.add('is-hidden');
         photoImgEl.src = scrapedPhotos[currentPhotoIdx] || scrapedPhotos[0];
-        photoCounterEl.textContent = `Photo ${currentPhotoIdx + 1} / ${scrapedPhotos.length}`;
+        if (photoCounterEl) photoCounterEl.textContent = `Photo ${currentPhotoIdx + 1} / ${scrapedPhotos.length}`;
       } else {
         photoStageEl.classList.add('is-hidden');
         camBarEl.classList.remove('is-hidden');
