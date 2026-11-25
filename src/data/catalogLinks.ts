@@ -21,7 +21,7 @@ export const CATALOG_PRODUCTS: CatalogProductLink[] = [
     id: 11,
     title: 'CUBO 4',
     subtitle: 'Enceinte studio compacte • 6,5" + Pavillon elliptique',
-    price: 'Sur devis',
+    price: 'À partir de 1 350,00 €',
     url: 'https://www.5426.fr/11-cubo-4.html',
   },
   {
