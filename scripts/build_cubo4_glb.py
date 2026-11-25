@@ -109,6 +109,22 @@ def build_revolved_profile(profile_rz: list[tuple[float, float]], segments: int 
     return m
 
 
+def make_socket_screw(radius: float = 0.0038, height: float = 0.0020) -> trimesh.Trimesh:
+    """Revolved button-head socket screw facing +Z (axis = Z, base at Z=0)."""
+    r_inner = radius * 0.42
+    r_rim = radius * 0.82
+    profile = [
+        (0.0002, height * 0.35),
+        (r_inner, height * 0.35),
+        (r_inner, height * 0.92),
+        (r_rim, height),
+        (radius, height * 0.55),
+        (radius, 0.0),
+        (0.0002, 0.0),
+    ]
+    return build_revolved_profile(profile, segments=20)
+
+
 def build_cubo4_woofer() -> dict[str, trimesh.Trimesh]:
     """
     Build realistic 6.5" woofer seated inside the 148mm cutout of CUBO 4:
@@ -130,12 +146,13 @@ def build_cubo4_woofer() -> dict[str, trimesh.Trimesh]:
     frame = build_revolved_profile(frame_profile, segments=64)
 
     screws = []
+    base_screw = make_socket_screw(radius=0.0028, height=0.0018)
     for k in range(6):
         ang = k * (2 * np.pi / 6) + math.pi / 6
         sx = 0.081 * math.cos(ang)
         sy = 0.081 * math.sin(ang)
-        head = trimesh.creation.cylinder(radius=0.0025, height=0.003, sections=14)
-        head.apply_translation([sx, sy, 0.0055])
+        head = base_screw.copy()
+        head.apply_translation([sx, sy, 0.0046])
         screws.append(head)
     screws_mesh = trimesh.util.concatenate(screws)
 
@@ -306,14 +323,25 @@ def build_cubo4_feet() -> trimesh.Trimesh:
 
 
 def build_facade_screws() -> trimesh.Trimesh:
-    """8 front mounting screws: 4 in the outer corners + 4 aligned vertically along the front edges."""
+    """8 front mounting socket screws facing +Z: 4 in the outer corners + 4 aligned along the front edges."""
     screws = []
+    base_screw = make_socket_screw(radius=0.0038, height=0.0020)
     for sx in (-0.118, 0.118):
         for sy in (0.016, 0.142, 0.276, 0.394):
-            head = trimesh.creation.cylinder(radius=0.0034, height=0.0022, sections=16)
-            head.apply_transform(trimesh.transformations.rotation_matrix(math.pi / 2, [1, 0, 0]))
-            head.apply_translation([sx, sy, 0.1336])
+            head = base_screw.copy()
+            head.apply_translation([sx, sy, 0.1330])
             screws.append(head)
+    return trimesh.util.concatenate(screws)
+
+
+def build_hp_cover_screws() -> trimesh.Trimesh:
+    """4 socket screws seated in the Facade avant HP.stl mounting holes (R=85mm around woofer)."""
+    screws = []
+    base_screw = make_socket_screw(radius=0.0034, height=0.0020)
+    for sx, sy in ((0.085, 0.240), (-0.085, 0.240), (0.0, 0.325), (0.0, 0.155)):
+        head = base_screw.copy()
+        head.apply_translation([sx, sy, 0.1520])
+        screws.append(head)
     return trimesh.util.concatenate(screws)
 
 
@@ -460,6 +488,7 @@ def main():
     for name, mesh in build_cubo4_castors().items():
         scene.add_geometry(mesh, node_name=name, geom_name=name)
     scene.add_geometry(build_facade_screws(), node_name="facade_screws", geom_name="facade_screws")
+    scene.add_geometry(build_hp_cover_screws(), node_name="hp_cover_screws", geom_name="hp_cover_screws")
     for name, mesh in build_climbing_holds().items():
         scene.add_geometry(mesh, node_name=name, geom_name=name)
 
