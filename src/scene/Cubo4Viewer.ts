@@ -208,7 +208,7 @@ export class Cubo4Viewer {
             mesh.material = this.frontPetgMat;
           } else if (name === 'woofer_frame') {
             mesh.material = this.wooferFrameMat;
-          } else if (name === 'woofer_screws' || name === 'facade_screws') {
+          } else if (name === 'woofer_screws' || name === 'facade_screws' || name === 'hp_cover_screws') {
             mesh.material = this.screwMat;
           } else if (name === 'woofer_surround') {
             mesh.material = this.wooferSurroundMat;
@@ -254,6 +254,7 @@ export class Cubo4Viewer {
           'woofer_frame',
           'woofer_screws',
           'facade_screws',
+          'hp_cover_screws',
           'woofer_surround',
           'woofer_cone',
           'woofer_dustcap',
@@ -339,6 +340,7 @@ export class Cubo4Viewer {
     this.setMeshVisible('even_std', !isMetal);
     this.setMeshVisible('even_metal', isMetal);
     this.setMeshVisible('facade_avant_hp', !isMetal && config.showHpCover);
+    this.setMeshVisible('hp_cover_screws', !isMetal && config.showHpCover);
 
     // Metal plate covers the outer woofer flange & screws (mounted behind the 2mm plate)
     this.setMeshVisible('woofer_frame', !isMetal);
