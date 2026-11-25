@@ -94,7 +94,7 @@ export function createWoodVeneerTextures(): PlywoodTextureSet {
   bCtx.fillStyle = '#808080';
   bCtx.fillRect(0, 0, size, size);
 
-  // Flowing longitudinal cathedral wood grain (stretched vertically along Y, wavy across X)
+  // High-contrast rotary-cut ash/oak cathedral contours matching IMG_20261003_163844321.jpg
   const imgData = cCtx.getImageData(0, 0, size, size);
   const bData = bCtx.getImageData(0, 0, size, size);
   const d = imgData.data;
@@ -104,29 +104,30 @@ export function createWoodVeneerTextures(): PlywoodTextureSet {
     const ny = y / size;
     for (let x = 0; x < size; x++) {
       const nx = x / size;
-      // Elongated cathedral arch along Y + organic lateral warp
-      const arch = Math.sin(ny * Math.PI * 2.0) * 0.22 + Math.sin(ny * Math.PI * 4.0 + 1.1) * 0.08;
-      const warp = Math.sin(nx * 9.0 + ny * 6.0) * 0.06 + Math.cos(ny * 17.0 - nx * 5.0) * 0.025;
-      const u = nx + arch + warp;
+      // Multi-center organic topographic cathedral pattern
+      const d1 = Math.hypot((nx - 0.35) * 1.15, (ny - 0.42) * 0.52);
+      const d2 = Math.hypot((nx - 0.78) * 1.1, (ny - 0.72) * 0.58);
+      const warp =
+        Math.sin(ny * Math.PI * 4.0 + nx * 5.0) * 0.045 +
+        Math.cos(nx * Math.PI * 6.0 - ny * 7.0) * 0.025 +
+        Math.sin(ny * 23.0 + nx * 13.0) * 0.008;
 
-      // Primary & secondary growth rings
-      const ring = Math.sin(u * 34.0) * 0.65 + Math.sin(u * 72.0 + 0.7) * 0.35;
+      const contour = Math.sin((Math.min(d1, d2 * 0.92) + warp) * 76.0);
       const idx = (y * size + x) * 4;
 
-      // Subtle warm/cool wood tone variation
-      let r = 207 + Math.round(ring * 14);
-      let g = 168 + Math.round(ring * 12);
-      let b = 110 + Math.round(ring * 9);
-      let bv = 128 + Math.round(ring * 12);
+      let r = 212 + Math.round(contour * 10);
+      let g = 178 + Math.round(contour * 9);
+      let b = 124 + Math.round(contour * 7);
+      let bv = 128 + Math.round(contour * 10);
 
-      // Sharp dark charcoal-brown latewood grain bands (characteristic of ash veneer)
-      if (ring > 0.56) {
-        const t = Math.min(1, (ring - 0.56) / 0.36);
-        const darkMix = 0.35 + t * 0.55;
-        r = Math.round(r * (1 - darkMix) + 38 * darkMix);
-        g = Math.round(g * (1 - darkMix) + 31 * darkMix);
-        b = Math.round(b * (1 - darkMix) + 24 * darkMix);
-        bv = Math.round(128 - t * 48);
+      // Crisp thin dark charcoal-brown wood grain rings
+      if (contour > 0.62) {
+        const t = Math.min(1, (contour - 0.62) / 0.32);
+        const darkMix = 0.52 + t * 0.42;
+        r = Math.round(r * (1 - darkMix) + 32 * darkMix);
+        g = Math.round(g * (1 - darkMix) + 27 * darkMix);
+        b = Math.round(b * (1 - darkMix) + 21 * darkMix);
+        bv = Math.round(128 - t * 58);
       }
 
       d[idx] = Math.min(255, Math.max(0, r));

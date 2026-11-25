@@ -330,6 +330,13 @@ export class Cubo4Viewer {
     this.setMeshVisible('even_metal', isMetal);
     this.setMeshVisible('facade_avant_hp', !isMetal && config.showHpCover);
 
+    // Mount woofer cleanly in front of the 2mm metal plate when Plaque métal is active
+    const wooferZ = isMetal ? 0.0022 : 0.0;
+    for (const wn of ['woofer_frame', 'woofer_screws', 'woofer_surround', 'woofer_cone', 'woofer_dustcap']) {
+      const wm = this.meshes.get(wn);
+      if (wm) wm.position.z = wooferZ;
+    }
+
     // Body finish
     this.applyWoodOrPaint(
       this.bodyMat,
