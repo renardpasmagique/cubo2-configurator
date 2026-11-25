@@ -126,14 +126,15 @@ export class Cubo4UI {
 
     const frontPetg = PETG_COLORS.find((c) => c.id === this.config.frontPetgId)?.name || '';
     const metalName = METAL_FINISHES.find((m) => m.id === this.config.frontPlate.finish)?.name || '';
+    const screwLabel = this.config.screwColor === 'silver' ? 'Argent' : 'Noir';
     const frontLabel =
       this.config.frontMode === 'metal_plate'
-        ? `Plaque métal ${metalName} · Évent spécial (${frontPetg})`
+        ? `Plaque métal ${metalName} · Évent (${frontPetg}) · Vis ${screwLabel}`
         : `${
             this.config.frontFaceColor.sameAsBody
               ? 'Façade assortie au corps'
               : `Façade ${PAINT_COLORS.find((p) => p.id === this.config.frontFaceColor.paintId)?.name || ''}`
-          }${this.config.showHpCover ? ` · Contour HP (${frontPetg})` : ''} · Évent (${frontPetg})`;
+          }${this.config.showHpCover ? ` · Contour HP (${frontPetg})` : ''} · Évent (${frontPetg}) · Vis ${screwLabel}`;
 
     const hornPetg = PETG_COLORS.find((c) => c.id === this.config.hornColorId)?.name || '';
     const mountLabel = MOUNT_OPTIONS.find((m) => m.id === this.config.mount)?.name || '';
@@ -313,6 +314,14 @@ export class Cubo4UI {
               Couleur PETG (${isMetal ? 'évent plaque métal' : 'contour HP &amp; évent'}) — <strong>${this.esc(frontPetg.name)}</strong>
             </label>
             ${this.renderPetgPalette(this.config.frontPetgId, 'data-front-petg')}
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Couleur des vis (façade, contour HP &amp; plaque métal)</label>
+            <div class="segmented-2">
+              <button type="button" class="seg-btn ${this.config.screwColor === 'silver' ? 'active' : ''}" data-screw-color="silver">Argent</button>
+              <button type="button" class="seg-btn ${this.config.screwColor === 'black' ? 'active' : ''}" data-screw-color="black">Noir</button>
+            </div>
           </div>
         `;
       }
@@ -756,6 +765,13 @@ export class Cubo4UI {
     this.root.querySelectorAll<HTMLElement>('[data-front-petg]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.frontPetgId = btn.dataset.frontPetg!;
+        this.emitChange();
+      });
+    });
+
+    this.root.querySelectorAll<HTMLElement>('[data-screw-color]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.config.screwColor = btn.dataset.screwColor as 'silver' | 'black';
         this.emitChange();
       });
     });

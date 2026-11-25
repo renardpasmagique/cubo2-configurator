@@ -532,12 +532,12 @@ export class ConfiguratorUI {
               architecture bass-reflex embarquant un haut-parleur de 15 pouces dédié aux basses fréquences. Le haut de
               l'enceinte est surmonté d'un diffuseur pour tweeter entièrement imprimé en 3D (PETG), spécifiquement
               modélisé pour s'adapter aux courbes acoustiques du moteur à compression monté à l'arrière. Le système
-              complet délivre une puissance totale de <strong>800 W RMS</strong>.
+              complet délivre une puissance totale de <strong>800 W RMS sous 8 Ω</strong>.
             </p>
 
             <h3>Conception acoustique &amp; Haut-parleurs</h3>
             <p>
-              L'enceinte passive CUBO 2 associe un haut-parleur 15 pouces et un moteur à compression monté sur un
+              L'enceinte passive CUBO 2 (8 Ω) associe un haut-parleur 15 pouces et un moteur à compression monté sur un
               pavillon imprimé en 3D sur mesure :
             </p>
             <ul>
