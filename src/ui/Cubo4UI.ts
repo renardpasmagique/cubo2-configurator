@@ -28,6 +28,7 @@ export class Cubo4UI {
   private showSimilarModal = false;
   private photos: string[] = [];
   private quoteScreenshot = '';
+  private copyToast = '';
   private quoteStatus: { type: 'idle' | 'sending' | 'success' | 'error'; message: string } = {
     type: 'idle',
     message: '',
@@ -56,7 +57,7 @@ export class Cubo4UI {
         } else {
           this.quoteStatus = {
             type: 'error',
-            message: event.data.error || 'Une erreur est survenue lors de l\'envoi.',
+            message: event.data.error || "Une erreur est survenue lors de l'envoi.",
           };
         }
         this.render();
@@ -92,28 +93,49 @@ export class Cubo4UI {
     return (r * 299 + g * 587 + b * 114) / 1000 > 186;
   }
 
-  private buildSummaryLines(): { label: string; value: string }[] {
+  private renderPetgPalette(selectedId: string, attrName: string): string {
+    const classic = PETG_COLORS.filter((c) => !c.translucent);
+    const translucent = PETG_COLORS.filter((c) => c.translucent);
+    const renderBtn = (c: (typeof PETG_COLORS)[number]) => {
+      const isActive = selectedId === c.id;
+      return `
+        <button
+          type="button"
+          class="swatch ${c.translucent ? 'is-translucent' : ''} ${isActive ? 'active' : ''}"
+          style="background:${c.hex}"
+          title="${this.esc(c.name)}"
+          ${attrName}="${c.id}"
+        ></button>
+      `;
+    };
+    return `
+      <div class="sub-label">Classique</div>
+      <div class="swatch-grid">${classic.map(renderBtn).join('')}</div>
+      <div class="sub-label" style="margin-top:6px">Translucent</div>
+      <div class="swatch-grid">${translucent.map(renderBtn).join('')}</div>
+    `;
+  }
+
+  private buildSummaryLines(): [string, string][] {
     const bodyLabel =
       this.config.bodyFinish.type === 'plywood'
         ? 'Contreplaqué'
         : this.config.bodyFinish.type === 'wood_veneer'
           ? 'Placage bois'
-          : `Peinture ${this.config.bodyFinish.paintSheen === 'satine' ? 'Satinée' : 'Mat'} — ${
+          : `Peinture ${this.config.bodyFinish.paintSheen === 'satine' ? 'Satiné' : 'Mat'} (${
               PAINT_COLORS.find((p) => p.id === this.config.bodyFinish.paintId)?.name || ''
-            }`;
+            })`;
 
     const frontPetg = PETG_COLORS.find((c) => c.id === this.config.frontPetgId)?.name || '';
     const metalName = METAL_FINISHES.find((m) => m.id === this.config.frontPlate.finish)?.name || '';
     const frontLabel =
       this.config.frontMode === 'metal_plate'
-        ? `Plaque métal ${metalName} + Évent spécial (${frontPetg})`
+        ? `Plaque métal ${metalName} · Évent spécial (${frontPetg})`
         : `${
             this.config.frontFaceColor.sameAsBody
               ? 'Façade assortie au corps'
-              : `Façade peinture ${
-                  PAINT_COLORS.find((p) => p.id === this.config.frontFaceColor.paintId)?.name || ''
-                }`
-          }${this.config.showHpCover ? ` + Contour HP (${frontPetg})` : ''} + Évent (${frontPetg})`;
+              : `Façade ${PAINT_COLORS.find((p) => p.id === this.config.frontFaceColor.paintId)?.name || ''}`
+          }${this.config.showHpCover ? ` · Contour HP (${frontPetg})` : ''} · Évent (${frontPetg})`;
 
     const hornPetg = PETG_COLORS.find((c) => c.id === this.config.hornColorId)?.name || '';
     const mountLabel = MOUNT_OPTIONS.find((m) => m.id === this.config.mount)?.name || '';
@@ -121,14 +143,14 @@ export class Cubo4UI {
     const textCol = PLAQUE_TEXT_COLORS.find((t) => t.id === this.config.badge.textColorId)?.name || '';
 
     return [
-      { label: 'Caisson', value: bodyLabel },
-      { label: 'Façade & Évent', value: frontLabel },
-      { label: 'Pavillon', value: `Elliptique (Oval) — ${hornPetg}` },
-      { label: 'Piétement', value: mountLabel },
-      {
-        label: 'Plaque ID',
-        value: `${platePetg} / Texte ${textCol}${this.config.badge.text ? ` — « ${this.config.badge.text} »` : ''}`,
-      },
+      ['1. Caisson', bodyLabel],
+      ['2. Façade & Évent', frontLabel],
+      ['3. Pavillon', `Elliptique (Oval) · ${hornPetg}`],
+      ['4. Piètement', mountLabel],
+      [
+        '5. Plaque',
+        `${platePetg}${this.config.badge.text.trim() ? ` · « ${this.config.badge.text.trim()} » (${textCol})` : ` · Texte ${textCol}`}`,
+      ],
     ];
   }
 
@@ -136,273 +158,267 @@ export class Cubo4UI {
     return [
       'CONFIGURATION CUBO 4 — 5426 STUDIO',
       '-----------------------------------',
-      ...this.buildSummaryLines().map((l) => `${l.label} : ${l.value}`),
+      ...this.buildSummaryLines().map(([k, v]) => `${k} : ${v}`),
     ].join('\n');
   }
 
-  private renderStep1Body(): string {
-    const typeOpts: { id: Cubo4BodyType; label: string; desc: string }[] = [
-      { id: 'plywood', label: 'Contreplaqué', desc: 'Bois apparent verni' },
-      { id: 'wood_veneer', label: 'Placage bois', desc: 'Veinage naturel marqué' },
-      { id: 'paint', label: 'Peinture', desc: 'Teintes studio' },
-    ];
+  private renderStepContent(stepId: number): string {
+    switch (stepId) {
+      case 1: {
+        const currentPaint = PAINT_COLORS.find((p) => p.id === this.config.bodyFinish.paintId) || PAINT_COLORS[0];
+        return `
+          <div class="control-group">
+            <label class="control-label">Matériau &amp; Finition du caisson</label>
+            <div class="option-list">
+              <button type="button" class="option-row ${this.config.bodyFinish.type === 'wood_veneer' ? 'active' : ''}" data-body-type="wood_veneer">
+                <div class="opt-col">
+                  <span class="opt-name">Placage bois</span>
+                  <span class="opt-sub">Veinage naturel marqué</span>
+                </div>
+              </button>
+              <button type="button" class="option-row ${this.config.bodyFinish.type === 'plywood' ? 'active' : ''}" data-body-type="plywood">
+                <div class="opt-col">
+                  <span class="opt-name">Contreplaqué</span>
+                  <span class="opt-sub">Bois brut verni</span>
+                </div>
+              </button>
+              <button type="button" class="option-row ${this.config.bodyFinish.type === 'paint' ? 'active' : ''}" data-body-type="paint">
+                <div class="opt-col">
+                  <span class="opt-name">Peinture</span>
+                  <span class="opt-sub">Teintes du catalogue</span>
+                </div>
+              </button>
+            </div>
+          </div>
 
-    const isPaint = this.config.bodyFinish.type === 'paint';
-    return `
-      <div class="option-group">
-        <div class="pill-grid">
-          ${typeOpts
-            .map(
-              (o) => `
-            <button type="button" class="pill-btn ${this.config.bodyFinish.type === o.id ? 'active' : ''}" data-body-type="${o.id}">
-              <strong>${o.label}</strong>
-              <span>${o.desc}</span>
-            </button>`
-            )
-            .join('')}
-        </div>
-      </div>
-      ${
-        isPaint
-          ? `
-        <div class="option-group">
-          <div class="sub-label">Aspect</div>
-          <div class="pill-grid two-col">
-            <button type="button" class="pill-btn ${this.config.bodyFinish.paintSheen === 'mat' ? 'active' : ''}" data-body-sheen="mat"><strong>Mat</strong></button>
-            <button type="button" class="pill-btn ${this.config.bodyFinish.paintSheen === 'satine' ? 'active' : ''}" data-body-sheen="satine"><strong>Satiné</strong></button>
-          </div>
-        </div>
-        <div class="option-group">
-          <div class="sub-label">Couleur du caisson</div>
-          <div class="swatch-grid">
-            ${PAINT_COLORS.map(
-              (p) => `
-              <button type="button" class="swatch-item ${this.config.bodyFinish.paintId === p.id ? 'active' : ''}" data-body-paint="${p.id}" title="${this.esc(p.name)}">
-                <span class="swatch-dot" style="background:${p.hex}"></span>
-                <span class="swatch-name">${this.esc(p.name)}</span>
-              </button>`
-            ).join('')}
-          </div>
-        </div>`
-          : ''
+          ${
+            this.config.bodyFinish.type === 'paint'
+              ? `
+            <div class="control-group">
+              <label class="control-label">Aspect</label>
+              <div class="segmented-2">
+                <button type="button" class="seg-btn ${this.config.bodyFinish.paintSheen === 'mat' ? 'active' : ''}" data-body-sheen="mat">Mat</button>
+                <button type="button" class="seg-btn ${this.config.bodyFinish.paintSheen === 'satine' ? 'active' : ''}" data-body-sheen="satine">Satiné</button>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Teinte — <strong>${this.esc(currentPaint.name)}</strong></label>
+              <div class="swatch-grid">
+                ${PAINT_COLORS.map(
+                  (c) => `
+                  <button
+                    type="button"
+                    class="swatch ${this.config.bodyFinish.paintId === c.id ? 'active' : ''}"
+                    style="background:${c.hex}"
+                    title="${this.esc(c.name)}"
+                    data-body-paint="${c.id}"
+                  ></button>
+                `
+                ).join('')}
+              </div>
+            </div>
+          `
+              : ''
+          }
+        `;
       }
-    `;
-  }
 
-  private renderStep2Body(): string {
-    const isMetal = this.config.frontMode === 'metal_plate';
-    return `
-      <div class="option-group">
-        <div class="sub-label">Type de façade</div>
-        <div class="pill-grid two-col">
-          <button type="button" class="pill-btn ${!isMetal ? 'active' : ''}" data-front-mode="wood_hp">
-            <strong>Façade bois + HP</strong>
-            <span>Évent standard</span>
-          </button>
-          <button type="button" class="pill-btn ${isMetal ? 'active' : ''}" data-front-mode="metal_plate">
-            <strong>Plaque métal</strong>
-            <span>Évent plaque métal</span>
-          </button>
-        </div>
-      </div>
+      case 2: {
+        const isMetal = this.config.frontMode === 'metal_plate';
+        const facePaint = PAINT_COLORS.find((p) => p.id === this.config.frontFaceColor.paintId) || PAINT_COLORS[0];
+        const frontPetg = PETG_COLORS.find((c) => c.id === this.config.frontPetgId) || PETG_COLORS[0];
+        return `
+          <div class="control-group">
+            <label class="control-label">Habillage façade</label>
+            <div class="option-list">
+              <button type="button" class="option-row ${!isMetal ? 'active' : ''}" data-front-mode="wood_hp">
+                <div class="opt-col">
+                  <span class="opt-name">Façade bois + HP</span>
+                  <span class="opt-sub">Contour HP &amp; évent standard</span>
+                </div>
+              </button>
+              <button type="button" class="option-row ${isMetal ? 'active' : ''}" data-front-mode="metal_plate">
+                <div class="opt-col">
+                  <span class="opt-name">Plaque métal affleurante</span>
+                  <span class="opt-sub">Évent spécial plaque métal</span>
+                </div>
+              </button>
+            </div>
+          </div>
 
-      ${
-        isMetal
-          ? `
-        <div class="option-group">
-          <div class="sub-label">Finition plaque métal</div>
-          <div class="pill-grid">
-            ${METAL_FINISHES.map(
-              (mf) => `
-              <button type="button" class="pill-btn ${this.config.frontPlate.finish === mf.id ? 'active' : ''}" data-metal-finish="${mf.id}">
-                <strong>${this.esc(mf.name)}</strong>
-              </button>`
-            ).join('')}
+          ${
+            isMetal
+              ? `
+            <div class="control-group">
+              <label class="control-label">Finition métal</label>
+              <div class="option-list">
+                ${METAL_FINISHES.map(
+                  (mf) => `
+                  <button type="button" class="option-row ${this.config.frontPlate.finish === mf.id ? 'active' : ''}" data-metal-finish="${mf.id}">
+                    <div class="opt-col">
+                      <span class="opt-name">${this.esc(mf.name)}</span>
+                    </div>
+                  </button>
+                `
+                ).join('')}
+              </div>
+            </div>
+          `
+              : `
+            <div class="control-group">
+              <label class="control-label">Couleur de la façade bois</label>
+              <div class="segmented-2">
+                <button type="button" class="seg-btn ${this.config.frontFaceColor.sameAsBody ? 'active' : ''}" data-face-same="true">Assortie au corps</button>
+                <button type="button" class="seg-btn ${!this.config.frontFaceColor.sameAsBody ? 'active' : ''}" data-face-same="false">Façade colorée</button>
+              </div>
+            </div>
+            ${
+              !this.config.frontFaceColor.sameAsBody
+                ? `
+              <div class="control-group">
+                <label class="control-label">Teinte façade — <strong>${this.esc(facePaint.name)}</strong></label>
+                <div class="swatch-grid">
+                  ${PAINT_COLORS.map(
+                    (c) => `
+                    <button
+                      type="button"
+                      class="swatch ${this.config.frontFaceColor.paintId === c.id ? 'active' : ''}"
+                      style="background:${c.hex}"
+                      title="${this.esc(c.name)}"
+                      data-face-paint="${c.id}"
+                    ></button>
+                  `
+                  ).join('')}
+                </div>
+              </div>
+            `
+                : ''
+            }
+            <div class="control-group">
+              <label class="control-label">Contour haut-parleur 3D</label>
+              <div class="segmented-2">
+                <button type="button" class="seg-btn ${this.config.showHpCover ? 'active' : ''}" data-hp-cover="true">Avec contour HP</button>
+                <button type="button" class="seg-btn ${!this.config.showHpCover ? 'active' : ''}" data-hp-cover="false">Sans contour HP</button>
+              </div>
+            </div>
+          `
+          }
+
+          <div class="control-group">
+            <label class="control-label">
+              Couleur PETG (${isMetal ? 'évent plaque métal' : 'contour HP &amp; évent'}) — <strong>${this.esc(frontPetg.name)}</strong>
+            </label>
+            ${this.renderPetgPalette(this.config.frontPetgId, 'data-front-petg')}
           </div>
-        </div>`
-          : `
-        <div class="option-group">
-          <div class="sub-label">Couleur de façade</div>
-          <div class="pill-grid two-col">
-            <button type="button" class="pill-btn ${this.config.frontFaceColor.sameAsBody ? 'active' : ''}" data-face-same="true">
-              <strong>Assortie au corps</strong>
-            </button>
-            <button type="button" class="pill-btn ${!this.config.frontFaceColor.sameAsBody ? 'active' : ''}" data-face-same="false">
-              <strong>Façade colorée</strong>
-            </button>
+        `;
+      }
+
+      case 3: {
+        const hornPetg = PETG_COLORS.find((c) => c.id === this.config.hornColorId) || PETG_COLORS[0];
+        return `
+          <div class="control-group">
+            <label class="control-label">Modèle de pavillon</label>
+            <div class="option-list">
+              <div class="option-row active" style="cursor:default;">
+                <div class="opt-col">
+                  <span class="opt-name">Pavillon Acoustique Elliptique (Oval)</span>
+                  <span class="opt-sub">Seul pavillon compatible avec CUBO 4</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        ${
-          !this.config.frontFaceColor.sameAsBody
-            ? `
-          <div class="option-group">
-            <div class="swatch-grid">
-              ${PAINT_COLORS.map(
-                (p) => `
-                <button type="button" class="swatch-item ${this.config.frontFaceColor.paintId === p.id ? 'active' : ''}" data-face-paint="${p.id}" title="${this.esc(p.name)}">
-                  <span class="swatch-dot" style="background:${p.hex}"></span>
-                  <span class="swatch-name">${this.esc(p.name)}</span>
-                </button>`
+
+          <div class="control-group">
+            <label class="control-label">Couleur du pavillon (PETG) — <strong>${this.esc(hornPetg.name)}</strong></label>
+            ${this.renderPetgPalette(this.config.hornColorId, 'data-horn-color')}
+          </div>
+        `;
+      }
+
+      case 4:
+        return `
+          <div class="control-group">
+            <label class="control-label">Piètement &amp; mobilité</label>
+            <div class="option-list">
+              ${MOUNT_OPTIONS.map(
+                (m) => `
+                <button type="button" class="option-row ${this.config.mount === m.id ? 'active' : ''}" data-mount="${m.id}">
+                  <div class="opt-col">
+                    <span class="opt-name">${this.esc(m.name)}</span>
+                    <span class="opt-sub">${this.esc(m.description)}</span>
+                  </div>
+                </button>
+              `
               ).join('')}
             </div>
-          </div>`
-            : ''
-        }
-        <div class="option-group">
-          <div class="sub-label">Contour haut-parleur 3D</div>
-          <div class="pill-grid two-col">
-            <button type="button" class="pill-btn ${this.config.showHpCover ? 'active' : ''}" data-hp-cover="true"><strong>Avec contour HP</strong></button>
-            <button type="button" class="pill-btn ${!this.config.showHpCover ? 'active' : ''}" data-hp-cover="false"><strong>Sans contour HP</strong></button>
           </div>
-        </div>`
+        `;
+
+      case 5: {
+        const platePetg = PETG_COLORS.find((c) => c.id === this.config.badge.plateColorId) || PETG_COLORS[0];
+        const textCol = PLAQUE_TEXT_COLORS.find((t) => t.id === this.config.badge.textColorId) || PLAQUE_TEXT_COLORS[0];
+        return `
+          <div class="control-group">
+            <label class="control-label">Couleur de la plaque (PETG) — <strong>${this.esc(platePetg.name)}</strong></label>
+            ${this.renderPetgPalette(this.config.badge.plateColorId, 'data-plate-color')}
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Couleur du texte — <strong>${this.esc(textCol.name)}</strong></label>
+            <div class="swatch-grid">
+              ${PLAQUE_TEXT_COLORS.map(
+                (t) => `
+                <button
+                  type="button"
+                  class="swatch ${this.config.badge.textColorId === t.id ? 'active' : ''}"
+                  style="background:${t.hex}"
+                  title="${this.esc(t.name)}"
+                  data-text-color="${t.id}"
+                ></button>
+              `
+              ).join('')}
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="cubo4-badge-input">Texte personnalisé</label>
+            <input
+              id="cubo4-badge-input"
+              class="text-input"
+              type="text"
+              maxlength="24"
+              placeholder="Ex : STUDIO 01"
+              value="${this.esc(this.config.badge.text)}"
+            />
+          </div>
+        `;
       }
 
-      <div class="option-group">
-        <div class="sub-label">Couleur PETG — ${isMetal ? 'Évent plaque métal' : 'Contour HP & Évent'}</div>
-        <div class="swatch-grid">
-          ${PETG_COLORS.map(
-            (c) => `
-            <button type="button" class="swatch-item ${this.config.frontPetgId === c.id ? 'active' : ''}" data-front-petg="${c.id}" title="${this.esc(c.name)}">
-              <span class="swatch-dot ${c.translucent ? 'translucent' : ''}" style="background:${c.hex}"></span>
-              <span class="swatch-name">${this.esc(c.name)}</span>
-            </button>`
-          ).join('')}
-        </div>
-      </div>
-    `;
+      default:
+        return '';
+    }
   }
 
-  private renderStep3Body(): string {
+  private renderDescriptionModal(isOpen: boolean): string {
     return `
-      <div class="option-group">
-        <div class="pill-btn active" style="cursor:default;text-align:left;">
-          <strong>Pavillon Elliptique (Oval)</strong>
-          <span>Seul pavillon compatible avec le format compact CUBO 4</span>
-        </div>
-      </div>
-      <div class="option-group">
-        <div class="sub-label">Couleur du pavillon (PETG)</div>
-        <div class="swatch-grid">
-          ${PETG_COLORS.map(
-            (c) => `
-            <button type="button" class="swatch-item ${this.config.hornColorId === c.id ? 'active' : ''}" data-horn-color="${c.id}" title="${this.esc(c.name)}">
-              <span class="swatch-dot ${c.translucent ? 'translucent' : ''}" style="background:${c.hex}"></span>
-              <span class="swatch-name">${this.esc(c.name)}</span>
-            </button>`
-          ).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  private renderStep4Body(): string {
-    return `
-      <div class="option-group">
-        <div class="pill-grid">
-          ${MOUNT_OPTIONS.map(
-            (m) => `
-            <button type="button" class="pill-btn ${this.config.mount === m.id ? 'active' : ''}" data-mount="${m.id}">
-              <strong>${this.esc(m.name)}</strong>
-            </button>`
-          ).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  private renderStep5Body(): string {
-    return `
-      <div class="option-group">
-        <div class="sub-label">Couleur de la plaque (PETG)</div>
-        <div class="swatch-grid">
-          ${PETG_COLORS.map(
-            (c) => `
-            <button type="button" class="swatch-item ${this.config.badge.plateColorId === c.id ? 'active' : ''}" data-plate-color="${c.id}" title="${this.esc(c.name)}">
-              <span class="swatch-dot ${c.translucent ? 'translucent' : ''}" style="background:${c.hex}"></span>
-              <span class="swatch-name">${this.esc(c.name)}</span>
-            </button>`
-          ).join('')}
-        </div>
-      </div>
-      <div class="option-group">
-        <div class="sub-label">Couleur du texte</div>
-        <div class="swatch-grid">
-          ${PLAQUE_TEXT_COLORS.map(
-            (t) => `
-            <button type="button" class="swatch-item ${this.config.badge.textColorId === t.id ? 'active' : ''}" data-text-color="${t.id}" title="${this.esc(t.name)}">
-              <span class="swatch-dot" style="background:${t.hex}"></span>
-              <span class="swatch-name">${this.esc(t.name)}</span>
-            </button>`
-          ).join('')}
-        </div>
-      </div>
-      <div class="option-group">
-        <div class="sub-label">Texte personnalisé</div>
-        <input
-          type="text"
-          id="cubo4-badge-input"
-          class="text-input"
-          maxlength="24"
-          placeholder="Ex : STUDIO 01"
-          value="${this.esc(this.config.badge.text)}"
-        />
-      </div>
-    `;
-  }
-
-  private renderGalleryModal(): string {
-    if (!this.showGalleryModal) return '';
-    return `
-      <div class="quote-modal-backdrop" id="cubo4-gallery-backdrop">
-        <div class="quote-modal" style="max-width:780px;">
-          <div class="quote-modal-header">
-            <h3>Photos CUBO 4</h3>
-            <button type="button" class="icon-btn" id="cubo4-gallery-close">✕</button>
+      <div class="modal-backdrop ${isOpen ? '' : 'is-hidden'}" id="desc-modal-backdrop" aria-hidden="${!isOpen}">
+        <div class="modal-card modal-wide desc-modal-card">
+          <div class="modal-head">
+            <h2>CUBO 4 — Descriptif &amp; Spécifications (5426 Studio)</h2>
+            <button type="button" class="btn-icon" id="btn-close-desc-modal">✕</button>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:12px 0;">
-            ${this.photos
-              .map(
-                (src, idx) => `
-              <button type="button" class="gallery-thumb-btn" data-lightbox-idx="${idx}" style="border:1px solid var(--sf-border,#d8d4cc);background:transparent;padding:0;cursor:pointer;aspect-ratio:1/1;overflow:hidden;">
-                <img src="${this.esc(src)}" alt="CUBO 4 photo ${idx + 1}" style="width:100%;height:100%;object-fit:cover;display:block;" />
-              </button>`
-              )
-              .join('')}
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderLightbox(): string {
-    if (this.lightboxIdx === null || !this.photos[this.lightboxIdx]) return '';
-    const src = this.photos[this.lightboxIdx];
-    return `
-      <div class="quote-modal-backdrop" id="cubo4-lightbox-backdrop" style="z-index:12000;background:rgba(0,0,0,0.92);">
-        <div style="position:relative;max-width:92vw;max-height:90vh;display:flex;align-items:center;justify-content:center;">
-          <button type="button" class="icon-btn" id="cubo4-lightbox-close" style="position:fixed;top:18px;right:18px;z-index:12010;background:#fff;color:#111;">✕</button>
-          <img src="${this.esc(src)}" alt="CUBO 4" style="max-width:90vw;max-height:86vh;object-fit:contain;" />
-        </div>
-      </div>
-    `;
-  }
-
-  private renderDescriptionModal(): string {
-    if (!this.showDescriptionModal) return '';
-    return `
-      <div class="quote-modal-backdrop" id="cubo4-desc-backdrop">
-        <div class="quote-modal" style="max-width:620px;">
-          <div class="quote-modal-header">
-            <h3>Descriptif technique — CUBO 4</h3>
-            <button type="button" class="icon-btn" id="cubo4-desc-close">✕</button>
-          </div>
-          <div style="font-size:13.5px;line-height:1.55;">
-            <p><strong>CUBO 4</strong> est l'enceinte studio compacte 2 voies de 5426 Studio, associant un haut-parleur grave-médium 6,5&quot; en charge bass-reflex accordée et le <strong>pavillon acoustique elliptique</strong> imprimé en 3D PETG.</p>
-            <ul style="padding-left:18px;margin:10px 0;">
-              <li><strong>Caisson</strong> : Contreplaqué brut verni, placage bois naturel ou peinture studio (Mat / Satiné).</li>
-              <li><strong>Façade</strong> : Façade bois (assortie ou colorée) avec contour HP 3D, ou plaque métal affleurante (Aluminium brut, brossé, Acier gris anthracite) avec évent dédié.</li>
-              <li><strong>Pavillon</strong> : Pavillon elliptique (Oval) équipé d'un moteur à compression 1&quot;.</li>
-              <li><strong>Bornier</strong> : Plaque supérieure 60 × 100 mm personnalisable avec 4 fiches bananes dorées.</li>
+          <div class="desc-content">
+            <p class="desc-lead">
+              L'enceinte <strong>CUBO 4</strong> est le modèle studio compact 2 voies de 5426 Studio, associant un
+              haut-parleur grave-médium de 6,5&quot; en charge bass-reflex accordée et le
+              <strong>pavillon acoustique elliptique</strong> imprimé en 3D PETG avec moteur à compression 1&quot;.
+            </p>
+            <h3>Personnalisation &amp; Options</h3>
+            <ul>
+              <li><strong>Caisson</strong> : placage bois naturel, contreplaqué verni ou peinture studio (Mat / Satiné).</li>
+              <li><strong>Façade</strong> : façade bois (assortie ou colorée) avec contour HP 3D, ou plaque métal affleurante (Aluminium Brut, Aluminium Brossé, Acier Gris Anthracite) avec évent spécial.</li>
+              <li><strong>Pavillon</strong> : pavillon elliptique (Oval) disponible dans tout le catalogue couleur PETG.</li>
+              <li><strong>Plaque bornier</strong> : plaque 60 × 100 mm personnalisable sur le dessus avec 4 fiches bananes dorées.</li>
             </ul>
           </div>
         </div>
@@ -410,208 +426,296 @@ export class Cubo4UI {
     `;
   }
 
-  private renderQuoteModal(): string {
-    if (!this.showQuoteModal) return '';
-    const summaryRows = this.buildSummaryLines();
+  private renderGalleryModal(isOpen: boolean): string {
     return `
-      <div class="quote-modal-backdrop" id="cubo4-quote-backdrop">
-        <div class="quote-modal">
-          <div class="quote-modal-header">
-            <h3>Demande de devis — CUBO 4</h3>
-            <button type="button" class="icon-btn" id="cubo4-quote-close">✕</button>
+      <div class="modal-backdrop ${isOpen ? '' : 'is-hidden'}" id="gallery-modal-backdrop" aria-hidden="${!isOpen}">
+        <div class="modal-card modal-wide">
+          <div class="modal-head">
+            <h2>Galerie Photos — Enceinte CUBO 4 (5426 Studio)</h2>
+            <button type="button" class="btn-icon" id="btn-close-gallery-modal">✕</button>
           </div>
-          <div class="quote-modal-body">
-            ${
-              this.quoteScreenshot
-                ? `<div class="quote-preview-box"><img src="${this.quoteScreenshot}" alt="Aperçu CUBO 4" /></div>`
-                : ''
-            }
-            <div class="quote-summary-box">
-              ${summaryRows
+          ${
+            this.photos.length > 0
+              ? `
+            <div class="cubo-gallery-grid">
+              ${this.photos
                 .map(
-                  (r) => `<div class="quote-summary-row"><span>${this.esc(r.label)}</span><strong>${this.esc(r.value)}</strong></div>`
+                  (url, i) => `
+                <button type="button" class="cubo-gallery-item cubo-gallery-btn" data-gallery-zoom="${i}" title="Agrandir la photo ${i + 1}">
+                  <img src="${this.esc(url)}" alt="CUBO 4 photo ${i + 1}" loading="lazy" />
+                </button>
+              `
                 )
                 .join('')}
             </div>
-            <form id="cubo4-quote-form" class="quote-form">
-              <div class="quote-form-grid">
-                <label>Nom / Studio *<input type="text" required name="name" value="${this.esc(this.customerForm.name)}" /></label>
-                <label>Email *<input type="email" required name="email" value="${this.esc(this.customerForm.email)}" /></label>
-                <label>Téléphone<input type="text" name="phone" value="${this.esc(this.customerForm.phone)}" /></label>
-                <label>Quantité<input type="text" name="quantity" value="${this.esc(this.customerForm.quantity)}" /></label>
-              </div>
-              <label>Ville / Pays<input type="text" name="location" value="${this.esc(this.customerForm.location)}" /></label>
-              <label>Précisions<textarea name="message" rows="3">${this.esc(this.customerForm.message)}</textarea></label>
-              ${
-                this.quoteStatus.type !== 'idle'
-                  ? `<div class="quote-status ${this.quoteStatus.type}">${this.esc(this.quoteStatus.message)}</div>`
-                  : ''
-              }
-              <div class="quote-modal-actions">
-                <button type="submit" class="btn-primary" ${this.quoteStatus.type === 'sending' ? 'disabled' : ''}>
-                  ${this.quoteStatus.type === 'sending' ? 'Envoi...' : 'Envoyer la demande de devis →'}
-                </button>
-              </div>
-            </form>
+          `
+              : `<p class="hint-text">Aucune photo disponible.</p>`
+          }
+        </div>
+      </div>
+      ${
+        isOpen && this.lightboxIdx !== null && this.photos[this.lightboxIdx]
+          ? `
+        <div class="lightbox-backdrop" id="gallery-lightbox">
+          <button type="button" class="photo-nav-btn photo-nav-prev" id="btn-lb-prev" title="Photo précédente">‹</button>
+          <img class="lightbox-img" src="${this.esc(this.photos[this.lightboxIdx])}" alt="CUBO 4 — photo ${this.lightboxIdx + 1}" />
+          <button type="button" class="photo-nav-btn photo-nav-next" id="btn-lb-next" title="Photo suivante">›</button>
+          <div class="lightbox-bar">
+            <span>${this.lightboxIdx + 1} / ${this.photos.length}</span>
+            <button type="button" class="btn-icon" id="btn-lb-close">Fermer ✕</button>
           </div>
+        </div>
+      `
+          : ''
+      }
+    `;
+  }
+
+  private renderQuoteModal(): string {
+    const rows = this.buildSummaryLines();
+    return `
+      <div class="modal-backdrop" id="modal-backdrop">
+        <div class="modal-card modal-wide modal-quote">
+          <div class="modal-head">
+            <div>
+              <h2>Demande de devis — CUBO 4</h2>
+              <p class="quote-subtitle">Tarification sur devis selon configuration</p>
+            </div>
+            <button type="button" class="btn-icon" id="btn-close-modal" title="Fermer">✕</button>
+          </div>
+
+          <form id="quote-contact-form" class="quote-contact-form">
+            <div class="quote-layout-2col">
+              <div class="quote-summary-col">
+                ${
+                  this.quoteScreenshot
+                    ? `
+                  <div class="quote-visual-box">
+                    <img src="${this.quoteScreenshot}" alt="Aperçu 3D CUBO 4 configurée" class="quote-preview-img" />
+                    <a class="quote-dl-link" href="${this.quoteScreenshot}" download="cubo4-configuration.png">
+                      Télécharger l'aperçu (.png) ↓
+                    </a>
+                  </div>
+                `
+                    : ''
+                }
+                <div class="quote-section-title">Récapitulatif des 5 étapes</div>
+                <dl class="quote-spec-list">
+                  ${rows
+                    .map(([k, v]) => `<div class="quote-spec-row"><dt>${k}</dt><dd>${this.esc(v)}</dd></div>`)
+                    .join('')}
+                </dl>
+              </div>
+
+              <div class="quote-fields-col">
+                <div class="quote-section-title">Vos coordonnées</div>
+                <div class="quote-fields-stack">
+                  <div class="form-field">
+                    <label for="quote-name">Nom &amp; Prénom *</label>
+                    <input id="quote-name" class="text-input" type="text" required placeholder="Votre nom complet" value="${this.esc(this.customerForm.name)}" />
+                  </div>
+                  <div class="form-field">
+                    <label for="quote-email">Adresse e-mail *</label>
+                    <input id="quote-email" class="text-input" type="email" required placeholder="exemple@domaine.fr" value="${this.esc(this.customerForm.email)}" />
+                  </div>
+                  <div class="form-field">
+                    <label for="quote-phone">Numéro de téléphone *</label>
+                    <input id="quote-phone" class="text-input" type="tel" required placeholder="06 00 00 00 00" value="${this.esc(this.customerForm.phone)}" />
+                  </div>
+                  <div class="quote-2fields">
+                    <div class="form-field">
+                      <label for="quote-qty">Quantité souhaitée</label>
+                      <select id="quote-qty" class="text-input">
+                        <option value="1 pièce" ${this.customerForm.quantity === '1 pièce' ? 'selected' : ''}>1 pièce</option>
+                        <option value="1 paire (2 enceintes)" ${this.customerForm.quantity === '1 paire (2 enceintes)' ? 'selected' : ''}>1 paire (2 enceintes)</option>
+                        <option value="Autre" ${this.customerForm.quantity === 'Autre' ? 'selected' : ''}>Autre (préciser)</option>
+                      </select>
+                    </div>
+                    <div class="form-field">
+                      <label for="quote-location">Code postal / Pays</label>
+                      <input id="quote-location" class="text-input" type="text" placeholder="Ex : 45000, France" value="${this.esc(this.customerForm.location)}" />
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label for="quote-msg">Précisions</label>
+                    <textarea id="quote-msg" class="text-input" rows="3" placeholder="Remarques ou délais...">${this.esc(this.customerForm.message)}</textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            ${this.quoteStatus.type !== 'idle' ? `<div class="quote-status ${this.quoteStatus.type}">${this.esc(this.quoteStatus.message)}</div>` : ''}
+            ${this.copyToast ? `<div class="copy-toast">${this.esc(this.copyToast)}</div>` : ''}
+
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" id="btn-copy-text">Copier la fiche</button>
+              <button type="submit" class="btn-primary" id="btn-submit-quote" ${this.quoteStatus.type === 'sending' ? 'disabled' : ''}>
+                ${this.quoteStatus.type === 'sending' ? 'Envoi en cours…' : 'Envoyer la demande de devis →'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     `;
   }
 
   public render(): void {
+    const prevScrollEl = this.root.querySelector<HTMLElement>('.steps-scroll');
+    const savedScrollTop = prevScrollEl ? prevScrollEl.scrollTop : 0;
+
     const steps = [
-      { id: 1, title: 'Caisson & Finition', body: this.renderStep1Body() },
-      { id: 2, title: 'Façade, HP & Évent', body: this.renderStep2Body() },
-      { id: 3, title: 'Pavillon Elliptique', body: this.renderStep3Body() },
-      { id: 4, title: 'Piétement & Mobilité', body: this.renderStep4Body() },
-      { id: 5, title: 'Plaque Personnalisée', body: this.renderStep5Body() },
+      { id: 1, title: 'Caisson & Finition' },
+      { id: 2, title: 'Façade, HP & Évent' },
+      { id: 3, title: 'Pavillon Elliptique' },
+      { id: 4, title: 'Piètements & Mobilité' },
+      { id: 5, title: "Plaque d'identification" },
     ];
 
     this.root.innerHTML = `
-      <div class="config-panel">
-        <div class="panel-header">
-          <div class="panel-title-row">
-            <div>
-              <h2>CUBO 4</h2>
-              <p class="panel-subtitle">Enceinte studio compacte — Pavillon elliptique</p>
-            </div>
-            <button type="button" class="btn-secondary btn-sm" id="cubo4-reset-btn" title="Réinitialiser">↺</button>
-          </div>
-          <div class="panel-quick-actions">
-            ${this.photos.length > 0 ? `<button type="button" class="btn-secondary btn-sm" id="cubo4-photos-btn">Photos (${this.photos.length})</button>` : ''}
-            <button type="button" class="btn-secondary btn-sm" id="cubo4-desc-btn">Descriptif</button>
-            <button type="button" class="btn-secondary btn-sm" id="cubo4-random-btn">Aléatoire</button>
-            <button type="button" class="btn-secondary btn-sm" id="cubo4-similar-btn">Autres produits</button>
-          </div>
-        </div>
-
-        <div class="steps-container">
-          ${steps
-            .map(
-              (s) => `
-            <div class="step-card ${this.activeStep === s.id ? 'open' : ''}">
-              <button type="button" class="step-header" data-step="${s.id}">
-                <span class="step-num">${s.id}</span>
-                <span class="step-title">${s.title}</span>
-                <span class="step-chevron">${this.activeStep === s.id ? '−' : '+'}</span>
-              </button>
-              ${this.activeStep === s.id ? `<div class="step-body">${s.body}</div>` : ''}
-            </div>`
-            )
-            .join('')}
-        </div>
-
-        <div class="panel-footer">
-          <div class="price-row">
-            <div>
-              <span class="price-label">Tarif sur devis</span>
-              <div class="price-value" style="font-size:15px;">Configuration 3D prête</div>
-            </div>
-          </div>
-          <div class="footer-actions">
-            <button type="button" class="btn-secondary" id="cubo4-png-btn">Aperçu PNG</button>
-            <button type="button" class="btn-primary" id="cubo4-quote-btn">Demander un devis →</button>
+      <div class="panel-header">
+        <div class="brand-row">
+          <h1 class="product-title">CUBO 4</h1>
+          <div class="header-btns">
+            ${this.photos.length > 0 ? '<button type="button" class="btn-icon" id="btn-gallery" title="Galerie photos">Photos</button>' : ''}
+            <button type="button" class="btn-icon" id="btn-desc" title="Descriptif &amp; Spécifications">Descriptif</button>
+            <button type="button" class="btn-icon" id="btn-similar" title="Autres produits">Autres</button>
           </div>
         </div>
       </div>
-      ${this.renderGalleryModal()}
-      ${this.renderLightbox()}
-      ${this.renderDescriptionModal()}
-      ${this.renderQuoteModal()}
+
+      <div class="steps-scroll">
+        ${steps
+          .map(
+            (s) => `
+          <section class="step-card ${this.activeStep === s.id ? 'is-open' : ''}">
+            <button type="button" class="step-header" data-step="${s.id}">
+              <span class="step-title">${s.title}</span>
+              <span class="step-chevron">${this.activeStep === s.id ? '−' : '+'}</span>
+            </button>
+            ${this.activeStep === s.id ? `<div class="step-body">${this.renderStepContent(s.id)}</div>` : ''}
+          </section>
+        `
+          )
+          .join('')}
+      </div>
+
+      <div class="panel-footer">
+        <div class="price-summary">
+          <div class="price-row-main">
+            <div>
+              <div class="price-label">Tarification sur devis</div>
+              <div class="price-base-note">Configuration 3D prête</div>
+            </div>
+            <div class="price-value" style="font-size:16px;">Sur devis</div>
+          </div>
+        </div>
+        <div class="footer-actions">
+          <button type="button" class="btn-secondary" id="btn-screenshot" title="Capturer un rendu PNG">Aperçu PNG</button>
+          <button type="button" class="btn-primary" id="btn-quote">Demander un devis →</button>
+        </div>
+      </div>
+
+      ${this.showQuoteModal ? this.renderQuoteModal() : ''}
+      ${this.renderDescriptionModal(this.showDescriptionModal)}
+      ${this.renderGalleryModal(this.showGalleryModal)}
       ${renderSimilarProductsModal(11, this.showSimilarModal)}
     `;
+
+    const nextScrollEl = this.root.querySelector<HTMLElement>('.steps-scroll');
+    if (nextScrollEl && savedScrollTop > 0) {
+      nextScrollEl.scrollTop = savedScrollTop;
+    }
 
     this.bindEvents();
   }
 
   private bindEvents(): void {
-    this.root.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-step]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        const s = Number(btn.dataset.step);
-        this.activeStep = this.activeStep === s ? 0 : s;
+        const id = Number(btn.dataset.step);
+        this.activeStep = this.activeStep === id ? 0 : id;
         this.render();
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-body-type]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-body-type]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.bodyFinish.type = btn.dataset.bodyType as Cubo4BodyType;
         this.emitChange();
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-body-sheen]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-body-sheen]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.bodyFinish.paintSheen = btn.dataset.bodySheen as 'mat' | 'satine';
         this.emitChange();
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-body-paint]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-body-paint]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.bodyFinish.paintId = btn.dataset.bodyPaint!;
         this.emitChange();
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-front-mode]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-front-mode]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.frontMode = btn.dataset.frontMode as 'wood_hp' | 'metal_plate';
         this.emitChange();
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-metal-finish]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-metal-finish]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.frontPlate.finish = btn.dataset.metalFinish as 'raw_alu' | 'brushed_alu' | 'anthracite_steel';
         this.emitChange();
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-face-same]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-face-same]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.frontFaceColor.sameAsBody = btn.dataset.faceSame === 'true';
         this.emitChange();
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-face-paint]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-face-paint]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.frontFaceColor.paintId = btn.dataset.facePaint!;
         this.emitChange();
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-hp-cover]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-hp-cover]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.showHpCover = btn.dataset.hpCover === 'true';
         this.emitChange();
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-front-petg]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-front-petg]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.frontPetgId = btn.dataset.frontPetg!;
         this.emitChange();
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-horn-color]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-horn-color]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.hornColorId = btn.dataset.hornColor!;
         this.emitChange();
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-mount]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-mount]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.mount = btn.dataset.mount as Cubo4Config['mount'];
         this.emitChange();
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-plate-color]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-plate-color]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.badge.plateColorId = btn.dataset.plateColor!;
         const petg = PETG_COLORS.find((c) => c.id === this.config.badge.plateColorId);
@@ -622,14 +726,14 @@ export class Cubo4UI {
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-text-color]').forEach((btn) => {
+    this.root.querySelectorAll<HTMLElement>('[data-text-color]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.config.badge.textColorId = btn.dataset.textColor!;
         this.emitChange();
       });
     });
 
-    const badgeInput = document.getElementById('cubo4-badge-input') as HTMLInputElement | null;
+    const badgeInput = this.root.querySelector<HTMLInputElement>('#cubo4-badge-input');
     if (badgeInput) {
       badgeInput.addEventListener('input', () => {
         this.config.badge.text = badgeInput.value.slice(0, 24);
@@ -637,70 +741,78 @@ export class Cubo4UI {
       });
     }
 
-    document.getElementById('cubo4-reset-btn')?.addEventListener('click', () => this.handlers.onReset());
-    document.getElementById('cubo4-random-btn')?.addEventListener('click', () => this.handlers.onRandomize());
-    document.getElementById('cubo4-desc-btn')?.addEventListener('click', () => {
+    this.root.querySelector('#btn-desc')?.addEventListener('click', () => {
       this.showDescriptionModal = true;
       this.render();
     });
-    document.getElementById('cubo4-desc-close')?.addEventListener('click', () => {
+    this.root.querySelector('#btn-close-desc-modal')?.addEventListener('click', () => {
       this.showDescriptionModal = false;
       this.render();
     });
-    document.getElementById('cubo4-desc-backdrop')?.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).id === 'cubo4-desc-backdrop') {
+    this.root.querySelector('#desc-modal-backdrop')?.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).id === 'desc-modal-backdrop') {
         this.showDescriptionModal = false;
         this.render();
       }
     });
 
-    document.getElementById('cubo4-photos-btn')?.addEventListener('click', () => {
+    this.root.querySelector('#btn-gallery')?.addEventListener('click', () => {
       this.showGalleryModal = true;
       this.render();
     });
-    document.getElementById('cubo4-gallery-close')?.addEventListener('click', () => {
+    this.root.querySelector('#btn-close-gallery-modal')?.addEventListener('click', () => {
       this.showGalleryModal = false;
-      this.render();
-    });
-    document.getElementById('cubo4-gallery-backdrop')?.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).id === 'cubo4-gallery-backdrop') {
-        this.showGalleryModal = false;
-        this.render();
-      }
-    });
-    this.root.querySelectorAll<HTMLButtonElement>('[data-lightbox-idx]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        this.lightboxIdx = Number(btn.dataset.lightboxIdx);
-        this.render();
-      });
-    });
-    document.getElementById('cubo4-lightbox-close')?.addEventListener('click', () => {
       this.lightboxIdx = null;
       this.render();
     });
-    document.getElementById('cubo4-lightbox-backdrop')?.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).id === 'cubo4-lightbox-backdrop') {
+    this.root.querySelector('#gallery-modal-backdrop')?.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).id === 'gallery-modal-backdrop') {
+        this.showGalleryModal = false;
         this.lightboxIdx = null;
         this.render();
       }
     });
+    this.root.querySelectorAll<HTMLElement>('[data-gallery-zoom]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.lightboxIdx = Number(btn.dataset.galleryZoom);
+        this.render();
+      });
+    });
+    this.root.querySelector('#btn-lb-close')?.addEventListener('click', () => {
+      this.lightboxIdx = null;
+      this.render();
+    });
+    this.root.querySelector('#btn-lb-prev')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this.lightboxIdx !== null && this.photos.length > 0) {
+        this.lightboxIdx = (this.lightboxIdx - 1 + this.photos.length) % this.photos.length;
+        this.render();
+      }
+    });
+    this.root.querySelector('#btn-lb-next')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this.lightboxIdx !== null && this.photos.length > 0) {
+        this.lightboxIdx = (this.lightboxIdx + 1) % this.photos.length;
+        this.render();
+      }
+    });
 
-    document.getElementById('cubo4-similar-btn')?.addEventListener('click', () => {
+    this.root.querySelector('#btn-similar')?.addEventListener('click', () => {
       this.showSimilarModal = true;
       this.render();
     });
-    document.getElementById('btn-close-similar')?.addEventListener('click', () => {
+    this.root.querySelector('#btn-close-similar')?.addEventListener('click', () => {
       this.showSimilarModal = false;
       this.render();
     });
-    document.getElementById('similar-modal-backdrop')?.addEventListener('click', (e) => {
+    this.root.querySelector('#similar-modal-backdrop')?.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).id === 'similar-modal-backdrop') {
         this.showSimilarModal = false;
         this.render();
       }
     });
 
-    document.getElementById('cubo4-png-btn')?.addEventListener('click', () => {
+    this.root.querySelector('#btn-screenshot')?.addEventListener('click', () => {
       const dataUrl = this.handlers.onScreenshot();
       const a = document.createElement('a');
       a.href = dataUrl;
@@ -708,37 +820,47 @@ export class Cubo4UI {
       a.click();
     });
 
-    document.getElementById('cubo4-quote-btn')?.addEventListener('click', () => {
+    this.root.querySelector('#btn-quote')?.addEventListener('click', () => {
       this.quoteScreenshot = this.handlers.onScreenshot();
       this.quoteStatus = { type: 'idle', message: '' };
       this.showQuoteModal = true;
       this.render();
     });
-    document.getElementById('cubo4-quote-close')?.addEventListener('click', () => {
+    this.root.querySelector('#btn-close-modal')?.addEventListener('click', () => {
       this.showQuoteModal = false;
       this.render();
     });
-    document.getElementById('cubo4-quote-backdrop')?.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).id === 'cubo4-quote-backdrop') {
+    this.root.querySelector('#modal-backdrop')?.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).id === 'modal-backdrop') {
         this.showQuoteModal = false;
         this.render();
       }
     });
 
-    const quoteForm = document.getElementById('cubo4-quote-form') as HTMLFormElement | null;
+    this.root.querySelector('#btn-copy-text')?.addEventListener('click', () => {
+      navigator.clipboard?.writeText(this.buildPlainSummary()).then(() => {
+        this.copyToast = 'Fiche copiée dans le presse-papier.';
+        this.render();
+        setTimeout(() => {
+          this.copyToast = '';
+          this.render();
+        }, 2500);
+      });
+    });
+
+    const quoteForm = this.root.querySelector<HTMLFormElement>('#quote-contact-form');
     if (quoteForm) {
       quoteForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const fd = new FormData(quoteForm);
         this.customerForm = {
-          name: String(fd.get('name') || ''),
-          email: String(fd.get('email') || ''),
-          phone: String(fd.get('phone') || ''),
-          quantity: String(fd.get('quantity') || ''),
-          location: String(fd.get('location') || ''),
-          message: String(fd.get('message') || ''),
+          name: (this.root.querySelector<HTMLInputElement>('#quote-name')?.value || '').trim(),
+          email: (this.root.querySelector<HTMLInputElement>('#quote-email')?.value || '').trim(),
+          phone: (this.root.querySelector<HTMLInputElement>('#quote-phone')?.value || '').trim(),
+          quantity: this.root.querySelector<HTMLSelectElement>('#quote-qty')?.value || '1 paire (2 enceintes)',
+          location: (this.root.querySelector<HTMLInputElement>('#quote-location')?.value || '').trim(),
+          message: (this.root.querySelector<HTMLTextAreaElement>('#quote-msg')?.value || '').trim(),
         };
-        this.quoteStatus = { type: 'sending', message: 'Envoi en cours...' };
+        this.quoteStatus = { type: 'sending', message: 'Envoi en cours…' };
         this.render();
 
         const payload = {
