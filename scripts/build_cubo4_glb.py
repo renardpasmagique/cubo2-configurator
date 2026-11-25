@@ -42,7 +42,7 @@ def cubo4_cad_to_three() -> np.ndarray:
     return T
 
 
-def add_box_uvs(mesh: trimesh.Trimesh, scale: float = 3.0) -> trimesh.Trimesh:
+def add_box_uvs(mesh: trimesh.Trimesh, scale: float = 2.2) -> trimesh.Trimesh:
     """Assign clean triplanar box UVs in meters so plywood & wood veneer tile naturally."""
     m = mesh.copy()
     m.unmerge_vertices()
@@ -279,35 +279,57 @@ def build_cubo4_terminal_plate() -> dict[str, trimesh.Trimesh]:
 
 
 def build_cubo4_feet() -> trimesh.Trimesh:
-    """4 custom feet under the 260x266mm CUBO 4 cabinet (resting at Y=0..0.016m)."""
-    parts = []
-    for sx in (-0.092, 0.092):
-        for sz in (-0.095, 0.095):
-            foot = trimesh.creation.cylinder(radius=0.019, height=0.016, sections=24)
-            foot.apply_transform(trimesh.transformations.rotation_matrix(math.pi / 2, [1, 0, 0]))
-            foot.apply_translation([sx, 0.008, sz])
-            parts.append(foot)
-    return trimesh.util.concatenate(parts)
+    """4 custom machined isolation feet (height = 0.042m) matching MOUNT_OPTIONS['feet']."""
+    positions = [
+        (-0.095, 0.0, -0.098),
+        (0.095, 0.0, -0.098),
+        (-0.095, 0.0, 0.098),
+        (0.095, 0.0, 0.098),
+    ]
+    profile = [
+        (0.001, 0.0),
+        (0.019, 0.0),
+        (0.021, 0.004),
+        (0.021, 0.012),
+        (0.017, 0.015),
+        (0.017, 0.036),
+        (0.020, 0.040),
+        (0.020, 0.042),
+        (0.001, 0.042),
+    ]
+    base_foot = build_revolved_profile(profile, segments=32)
+    base_foot.apply_transform(trimesh.transformations.rotation_matrix(-math.pi / 2, [1, 0, 0]))
+    feet = []
+    for px, py, pz in positions:
+        f = base_foot.copy()
+        f.apply_translation([px, py, pz])
+        feet.append(f)
+    return trimesh.util.concatenate(feet)
 
 
 def build_cubo4_castors() -> dict[str, trimesh.Trimesh]:
-    """4 industrial swivel castors under the 260x266mm CUBO 4 cabinet (total height 55mm)."""
+    """4 industrial swivel castors (total height = 0.078m) matching MOUNT_OPTIONS['castors']."""
     brackets, wheels = [], []
-    for sx in (-0.088, 0.088):
-        for sz in (-0.090, 0.090):
+    for sx in (-0.090, 0.090):
+        for sz in (-0.092, 0.092):
             plate = trimesh.creation.box(extents=[0.044, 0.004, 0.044])
-            plate.apply_translation([sx, 0.053, sz])
+            plate.apply_translation([sx, 0.076, sz])
             brackets.append(plate)
 
-            fork_l = trimesh.creation.box(extents=[0.004, 0.032, 0.022])
-            fork_l.apply_translation([sx - 0.012, 0.036, sz])
-            fork_r = trimesh.creation.box(extents=[0.004, 0.032, 0.022])
-            fork_r.apply_translation([sx + 0.012, 0.036, sz])
+            swivel = trimesh.creation.cylinder(radius=0.016, height=0.008, sections=20)
+            swivel.apply_transform(trimesh.transformations.rotation_matrix(math.pi / 2, [1, 0, 0]))
+            swivel.apply_translation([sx, 0.070, sz])
+            brackets.append(swivel)
+
+            fork_l = trimesh.creation.box(extents=[0.004, 0.044, 0.022])
+            fork_l.apply_translation([sx - 0.012, 0.046, sz])
+            fork_r = trimesh.creation.box(extents=[0.004, 0.044, 0.022])
+            fork_r.apply_translation([sx + 0.012, 0.046, sz])
             brackets.extend([fork_l, fork_r])
 
-            wheel = trimesh.creation.cylinder(radius=0.021, height=0.018, sections=24)
+            wheel = trimesh.creation.cylinder(radius=0.025, height=0.018, sections=24)
             wheel.apply_transform(trimesh.transformations.rotation_matrix(math.pi / 2, [0, 1, 0]))
-            wheel.apply_translation([sx, 0.021, sz])
+            wheel.apply_translation([sx, 0.025, sz])
             wheels.append(wheel)
 
     return {
@@ -353,6 +375,8 @@ def main():
 
     ev_met = trimesh.load(os.path.join(c4_dir, "Even plaque en metal.stl"), force="mesh")
     ev_met.apply_transform(T)
+    # Shift +2.2mm forward so the port flange sits cleanly in front of Plaque metal.stl (Z=0.135m)
+    ev_met.apply_translation([0.0, 0.0, 0.0022])
     scene.add_geometry(ev_met, node_name="even_metal", geom_name="even_metal")
 
     # 6. Oval Horn (5426 oval horn.stl) -> centered at X=0, resting on top of cabinet Y=0.410m, front at Z=+0.133m
