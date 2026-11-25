@@ -31,6 +31,11 @@ export interface Cubo4Config {
   frontPetgId: string;
   hornColorId: string;
   mount: MountType;
+  climbingHolds: {
+    enabled: boolean;
+    leftColorId: string;
+    rightColorId: string;
+  };
   badge: {
     plateColorId: string;
     textColorId: string;
@@ -41,6 +46,8 @@ export interface Cubo4Config {
 export function createDefaultCubo4Config(): Cubo4Config {
   const defaultHorn = PETG_COLORS.find((c) => /translucent|transparent/i.test(c.name)) || PETG_COLORS[0];
   const defaultFrontPetg = PETG_COLORS.find((c) => /bleu|blue/i.test(c.name)) || PETG_COLORS[0];
+  const defaultLeftHold = PETG_COLORS.find((c) => /rose|pink|rouge/i.test(c.name)) || PETG_COLORS[1];
+  const defaultRightHold = PETG_COLORS.find((c) => /bleu|blue/i.test(c.name)) || PETG_COLORS[2];
   return {
     bodyFinish: {
       type: 'wood_veneer',
@@ -60,6 +67,11 @@ export function createDefaultCubo4Config(): Cubo4Config {
     frontPetgId: defaultFrontPetg.id,
     hornColorId: defaultHorn.id,
     mount: 'feet',
+    climbingHolds: {
+      enabled: false,
+      leftColorId: defaultLeftHold.id,
+      rightColorId: defaultRightHold.id,
+    },
     badge: {
       plateColorId: defaultHorn.id,
       textColorId: PLAQUE_TEXT_COLORS[0].id,
@@ -101,6 +113,11 @@ export function createRandomCubo4Config(currentText = ''): Cubo4Config {
     frontPetgId: pick(PETG_COLORS).id,
     hornColorId: pick(PETG_COLORS).id,
     mount: pick(mounts),
+    climbingHolds: {
+      enabled: Math.random() < 0.45,
+      leftColorId: pick(PETG_COLORS).id,
+      rightColorId: pick(PETG_COLORS).id,
+    },
     badge: {
       plateColorId: plateColor.id,
       textColorId: isPlateDark ? 'txt-white' : 'txt-black',
