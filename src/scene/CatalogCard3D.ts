@@ -197,12 +197,18 @@ export class CatalogCard3D {
           const darkMat = new THREE.MeshStandardMaterial({ color: 0x1d1e22, roughness: 0.65 });
           const steelMat = new THREE.MeshStandardMaterial({ color: 0xb4b8be, roughness: 0.3, metalness: 0.85 });
 
+          const upper = new THREE.Group();
+          const lower = new THREE.Group();
+          const allMeshes: THREE.Mesh[] = [];
           root.traverse((o) => {
-            if (!(o as THREE.Mesh).isMesh) return;
-            const m = o as THREE.Mesh;
+            if ((o as THREE.Mesh).isMesh) allMeshes.push(o as THREE.Mesh);
+          });
+          for (const m of allMeshes) {
             if (['cabinet_metal_body', 'cabinet_metal_baffle', 'front_metal_plate', 'even_metal', 'castors_bracket', 'castors_wheel'].includes(m.name)) {
               m.visible = false;
-            } else if (m.name === 'cabinet_std_body' || m.name === 'cabinet_std_baffle') {
+              continue;
+            }
+            if (m.name === 'cabinet_std_body' || m.name === 'cabinet_std_baffle') {
               m.material = veneerMat;
             } else if (m.name === 'horn_oval') {
               m.material = hornMat;
@@ -213,8 +219,18 @@ export class CatalogCard3D {
             } else {
               m.material = darkMat;
             }
-          });
-          this.attachCardSlot(item.card, item.imgEl, 'cubo4', root, size, 0.36, -0.45);
+            if (m.name === 'mount_feet') {
+              lower.add(m);
+            } else {
+              upper.add(m);
+            }
+          }
+          upper.position.y = 0.042;
+          const assembly = new THREE.Group();
+          assembly.add(upper);
+          assembly.add(lower);
+          const centered = this.centerObjectAtOrigin(assembly);
+          this.attachCardSlot(item.card, item.imgEl, 'cubo4', centered, size, 0.36, -0.45);
         }
       });
     }
@@ -443,8 +459,9 @@ export class CatalogCard3D {
     linkEl.style.position = 'relative';
     linkEl.style.display = 'block';
     linkEl.style.background = 'transparent';
-    const pic = imgEl.closest('picture') || imgEl;
-    (pic as HTMLElement).style.display = 'none';
+    linkEl.querySelectorAll('picture, img').forEach((el) => {
+      (el as HTMLElement).style.display = 'none';
+    });
     linkEl.appendChild(canvas2d);
 
     const slot: CardSlot = {
