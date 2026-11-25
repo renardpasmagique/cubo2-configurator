@@ -351,7 +351,8 @@ export class Cubo4Viewer {
       if (wm) wm.position.z = wooferZ;
     }
 
-    // Front screws (4 corners + 4 aligned on front) & woofer screws share screwColor
+    // Front 8 screws only visible on the metal plate; when wood front, only speaker screws show
+    this.setMeshVisible('facade_screws', isMetal);
     this.screwMat.color.setHex(config.screwColor === 'silver' ? 0xc8cdd4 : 0x1a1b1e);
     const facadeScrewMesh = this.meshes.get('facade_screws');
     if (facadeScrewMesh) facadeScrewMesh.position.z = isMetal ? 0.0020 : 0.0;
