@@ -279,14 +279,15 @@ def build_cubo4_terminal_plate() -> dict[str, trimesh.Trimesh]:
 
 
 def build_cubo4_feet() -> trimesh.Trimesh:
-    """4 TPU feet loaded from Cubo 4/Pied tpu.stl (height = 22.43mm) at cabinet corners."""
+    """4 TPU feet loaded from Cubo 4/Pied tpu.stl (height = 22.43mm), wide flange up against cabinet."""
     stl_path = os.path.join(STL_ROOT, "Cubo 4", "Pied tpu.stl")
     base_foot = trimesh.load(stl_path, force="mesh")
-    # Convert CAD mm (X, Y, Z=up) -> Three.js m (X, Y=up, Z=front)
+    # Convert CAD mm (X, Y, Z=0 top..22.43 bottom) -> Three.js m (wide Z=0 at Y=0.02243, narrow tip at Y=0)
     R = np.zeros((4, 4), dtype=np.float64)
     R[0, 0] = 0.001
-    R[1, 2] = 0.001
-    R[2, 1] = -0.001
+    R[1, 2] = -0.001
+    R[1, 3] = 0.02243
+    R[2, 1] = 0.001
     R[3, 3] = 1.0
     base_foot.apply_transform(R)
 
@@ -302,6 +303,18 @@ def build_cubo4_feet() -> trimesh.Trimesh:
         f.apply_translation([px, py, pz])
         feet.append(f)
     return trimesh.util.concatenate(feet)
+
+
+def build_facade_screws() -> trimesh.Trimesh:
+    """8 front mounting screws: 4 in the outer corners + 4 aligned vertically along the front edges."""
+    screws = []
+    for sx in (-0.118, 0.118):
+        for sy in (0.016, 0.142, 0.276, 0.394):
+            head = trimesh.creation.cylinder(radius=0.0034, height=0.0022, sections=16)
+            head.apply_transform(trimesh.transformations.rotation_matrix(math.pi / 2, [1, 0, 0]))
+            head.apply_translation([sx, sy, 0.1336])
+            screws.append(head)
+    return trimesh.util.concatenate(screws)
 
 
 def build_climbing_holds() -> dict[str, trimesh.Trimesh]:
@@ -404,8 +417,8 @@ def main():
 
     ev_met = trimesh.load(os.path.join(c4_dir, "Even plaque en metal.stl"), force="mesh")
     ev_met.apply_transform(T)
-    # Shift +3.0mm forward so the port bezel sits cleanly in front of Plaque metal.stl (Z=0.135m)
-    ev_met.apply_translation([0.0, 0.0, 0.0030])
+    # Shift -2.0mm back so Plaque metal.stl (Z=0.133..0.135m) sits cleanly IN FRONT of the port rim (flush smooth look)
+    ev_met.apply_translation([0.0, 0.0, -0.0020])
     scene.add_geometry(ev_met, node_name="even_metal", geom_name="even_metal")
 
     # 6. Oval Horn (5426 oval horn.stl) -> centered at X=0, resting on top of cabinet Y=0.410m, front at Z=+0.133m
@@ -442,10 +455,11 @@ def main():
     for name, mesh in build_cubo4_terminal_plate().items():
         scene.add_geometry(mesh, node_name=name, geom_name=name)
 
-    # 10. TPU feet, Castors & Climbing hold side handles
+    # 10. TPU feet, Castors, Front screws & Climbing hold side handles
     scene.add_geometry(build_cubo4_feet(), node_name="mount_feet", geom_name="mount_feet")
     for name, mesh in build_cubo4_castors().items():
         scene.add_geometry(mesh, node_name=name, geom_name=name)
+    scene.add_geometry(build_facade_screws(), node_name="facade_screws", geom_name="facade_screws")
     for name, mesh in build_climbing_holds().items():
         scene.add_geometry(mesh, node_name=name, geom_name=name)
 
