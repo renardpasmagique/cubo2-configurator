@@ -413,6 +413,13 @@ export class Cubo4UI {
               haut-parleur grave-médium de 6,5&quot; en charge bass-reflex accordée et le
               <strong>pavillon acoustique elliptique</strong> imprimé en 3D PETG avec moteur à compression 1&quot;.
             </p>
+            <h3>Filtre passif haute fidélité : CROSS 2 (5426 Studio)</h3>
+            <p>
+              Comme la CUBO 2, la CUBO 4 est équipée de la carte crossover passif 2 voies sur mesure
+              <strong>CROSS 2</strong> : topologie Linkwitz-Riley 2e ordre (12 dB/octave), condensateurs polypropylène
+              MKP audiophiles, bobines à faible résistance série, double plan de masse cuivre lourd 2 oz et finition
+              dorure or véritable (ENIG).
+            </p>
             <h3>Personnalisation &amp; Options</h3>
             <ul>
               <li><strong>Caisson</strong> : placage bois naturel, contreplaqué verni ou peinture studio (Mat / Satiné).</li>
