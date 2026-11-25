@@ -12,7 +12,7 @@ import {
 } from './pricing';
 
 export const CUBO4_BASE_PRICE = 1350;
-export const CUBO4_WOOD_VENEER_PRICE = 50;
+export const CUBO4_WOOD_VENEER_PRICE = 100;
 export const CUBO4_FACE_COLOR_PRICE = 30;
 export const CUBO4_HOLDS_PRICE = 50;
 export const CUBO4_METAL_PRICES: Record<MetalFinishId, number> = {
