@@ -279,32 +279,61 @@ def build_cubo4_terminal_plate() -> dict[str, trimesh.Trimesh]:
 
 
 def build_cubo4_feet() -> trimesh.Trimesh:
-    """4 custom machined isolation feet (height = 0.042m) matching MOUNT_OPTIONS['feet']."""
+    """4 TPU feet loaded from Cubo 4/Pied tpu.stl (height = 22.43mm) at cabinet corners."""
+    stl_path = os.path.join(STL_ROOT, "Cubo 4", "Pied tpu.stl")
+    base_foot = trimesh.load(stl_path, force="mesh")
+    # Convert CAD mm (X, Y, Z=up) -> Three.js m (X, Y=up, Z=front)
+    R = np.zeros((4, 4), dtype=np.float64)
+    R[0, 0] = 0.001
+    R[1, 2] = 0.001
+    R[2, 1] = -0.001
+    R[3, 3] = 1.0
+    base_foot.apply_transform(R)
+
     positions = [
-        (-0.095, 0.0, -0.098),
-        (0.095, 0.0, -0.098),
-        (-0.095, 0.0, 0.098),
-        (0.095, 0.0, 0.098),
+        (-0.092, 0.0, -0.095),
+        (0.092, 0.0, -0.095),
+        (-0.092, 0.0, 0.095),
+        (0.092, 0.0, 0.095),
     ]
-    profile = [
-        (0.001, 0.0),
-        (0.019, 0.0),
-        (0.021, 0.004),
-        (0.021, 0.012),
-        (0.017, 0.015),
-        (0.017, 0.036),
-        (0.020, 0.040),
-        (0.020, 0.042),
-        (0.001, 0.042),
-    ]
-    base_foot = build_revolved_profile(profile, segments=32)
-    base_foot.apply_transform(trimesh.transformations.rotation_matrix(-math.pi / 2, [1, 0, 0]))
     feet = []
     for px, py, pz in positions:
         f = base_foot.copy()
         f.apply_translation([px, py, pz])
         feet.append(f)
     return trimesh.util.concatenate(feet)
+
+
+def build_climbing_holds() -> dict[str, trimesh.Trimesh]:
+    """
+    Build simple organic climbing-hold side handles (left & right) inspired by
+    IMG_20261003_163844321.jpg & IMG_20261003_164002087.jpg, mounted on X = ±0.130m.
+    """
+    def make_hold(side: int) -> trimesh.Trimesh:
+        # Deformed icosphere flattened on the cabinet side (X=0) for an organic jug grip
+        sph = trimesh.creation.icosphere(subdivisions=3, radius=0.044)
+        v = sph.vertices.copy()
+        # Scale to ~90mm Z x 72mm Y x 46mm X protrusion
+        v[:, 0] *= 0.95
+        v[:, 1] *= 0.82
+        v[:, 2] *= 1.08
+        # Asymmetric ergonomic grip contour
+        v[:, 1] += 0.010 * np.sin(v[:, 2] * 35.0) - 0.008 * np.maximum(0.0, v[:, 0] * side)
+        v[:, 0] += 0.006 * np.cos(v[:, 1] * 40.0) * side
+        # Flatten the mounting back face against the cabinet wall
+        if side > 0:
+            v[:, 0] = np.maximum(0.0, v[:, 0])
+        else:
+            v[:, 0] = np.minimum(0.0, v[:, 0])
+        m = trimesh.Trimesh(vertices=v, faces=sph.faces, process=True)
+        m.fix_normals()
+        m.apply_translation([side * 0.129, 0.255, 0.005])
+        return m
+
+    return {
+        "hold_left": make_hold(-1),
+        "hold_right": make_hold(1),
+    }
 
 
 def build_cubo4_castors() -> dict[str, trimesh.Trimesh]:
@@ -375,8 +404,8 @@ def main():
 
     ev_met = trimesh.load(os.path.join(c4_dir, "Even plaque en metal.stl"), force="mesh")
     ev_met.apply_transform(T)
-    # Shift +2.2mm forward so the port flange sits cleanly in front of Plaque metal.stl (Z=0.135m)
-    ev_met.apply_translation([0.0, 0.0, 0.0022])
+    # Shift +3.0mm forward so the port bezel sits cleanly in front of Plaque metal.stl (Z=0.135m)
+    ev_met.apply_translation([0.0, 0.0, 0.0030])
     scene.add_geometry(ev_met, node_name="even_metal", geom_name="even_metal")
 
     # 6. Oval Horn (5426 oval horn.stl) -> centered at X=0, resting on top of cabinet Y=0.410m, front at Z=+0.133m
@@ -413,9 +442,11 @@ def main():
     for name, mesh in build_cubo4_terminal_plate().items():
         scene.add_geometry(mesh, node_name=name, geom_name=name)
 
-    # 10. Custom feet & Castors
+    # 10. TPU feet, Castors & Climbing hold side handles
     scene.add_geometry(build_cubo4_feet(), node_name="mount_feet", geom_name="mount_feet")
     for name, mesh in build_cubo4_castors().items():
+        scene.add_geometry(mesh, node_name=name, geom_name=name)
+    for name, mesh in build_climbing_holds().items():
         scene.add_geometry(mesh, node_name=name, geom_name=name)
 
     scene.export(OUT_RAW)
