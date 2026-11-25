@@ -7,6 +7,7 @@ import {
   PETG_COLORS,
   PLAQUE_TEXT_COLORS,
   MountType,
+  ScrewColor,
 } from './pricing';
 
 export type Cubo4BodyType = 'plywood' | 'wood_veneer' | 'paint';
@@ -29,6 +30,7 @@ export interface Cubo4Config {
   };
   showHpCover: boolean;
   frontPetgId: string;
+  screwColor: ScrewColor;
   hornColorId: string;
   mount: MountType;
   climbingHolds: {
@@ -65,10 +67,11 @@ export function createDefaultCubo4Config(): Cubo4Config {
     },
     showHpCover: true,
     frontPetgId: defaultFrontPetg.id,
+    screwColor: 'black',
     hornColorId: defaultHorn.id,
     mount: 'feet',
     climbingHolds: {
-      enabled: false,
+      enabled: true,
       leftColorId: defaultLeftHold.id,
       rightColorId: defaultRightHold.id,
     },
@@ -111,6 +114,7 @@ export function createRandomCubo4Config(currentText = ''): Cubo4Config {
     },
     showHpCover: frontMode === 'wood_hp' ? Math.random() < 0.78 : false,
     frontPetgId: pick(PETG_COLORS).id,
+    screwColor: pick(['silver', 'black'] as const),
     hornColorId: pick(PETG_COLORS).id,
     mount: pick(mounts),
     climbingHolds: {
